@@ -28,10 +28,11 @@ module.exports = {
   keys: require('lodash.keys'),
   map: require('lodash.map'),
   merge: require('lodash.merge'),
+  mergeWith: require('lodash.mergewith'),
   noop: require('lodash.noop'),
   orderBy: require('lodash.orderby'),
   reduce: require('lodash.reduce'),
   remove: require('lodash.remove'),
   size: require('lodash.size'),
   toArray: require('lodash.toarray')
-};
+}

@@ -209,11 +209,7 @@ MockFirestoreDocument.prototype._update = function(changes, opts, callback) {
 }
 
 MockFirestoreDocument.prototype.update = function(changes, callback) {
-<<<<<<< HEAD
   return this._update(changes, { setMerge: false }, callback)
-=======
-  return this._update(changes, { setMerge: true }, callback)
->>>>>>> 11a74c9905cde6cacb33fd2d25f972acff2ffdc9
 }
 
 MockFirestoreDocument.prototype.delete = function(callback) {

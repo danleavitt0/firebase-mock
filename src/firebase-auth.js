@@ -1,95 +1,95 @@
-'use strict';
+'use strict'
 
-var _      = require('./lodash');
-var format = require('util').format;
-var Promise   = require('rsvp').Promise;
-var User = require('./user');
+var _ = require('./lodash')
+var format = require('util').format
+var Promise = require('rsvp').Promise
+var User = require('./user')
 
-function FirebaseAuth () {
-  this.currentUser = null;
+function FirebaseAuth() {
+  this.currentUser = null
   this._auth = {
     listeners: [],
     completionListeners: [],
     users: [],
     uidCounter: 1
-  };
+  }
 }
 
-FirebaseAuth.prototype.changeAuthState = function (userData) {
+FirebaseAuth.prototype.changeAuthState = function(userData) {
   this._defer('changeAuthState', _.toArray(arguments), function() {
     if (!_.isEqual(this.currentUser, userData)) {
-      this.currentUser = _.isObject(userData) ? userData : null;
-      this._triggerAuthEvent();
+      this.currentUser = _.isObject(userData) ? userData : null
+      this._triggerAuthEvent()
     }
-  });
-};
+  })
+}
 
-FirebaseAuth.prototype.onAuthStateChanged = function (callback) {
-  var self = this;
-  var currentUser = this.currentUser;
-  this._auth.listeners.push({fn: callback});
+FirebaseAuth.prototype.onAuthStateChanged = function(callback) {
+  var self = this
+  var currentUser = this.currentUser
+  this._auth.listeners.push({ fn: callback })
 
-  defer();
-  return destroy;
+  defer()
+  return destroy
 
   function destroy() {
-    self.offAuth(callback);
+    self.offAuth(callback)
   }
 
   function defer() {
     self._defer('onAuthStateChanged', _.toArray(arguments), function() {
       if (!_.isEqual(self.currentUser, currentUser)) {
-        self._triggerAuthEvent();
+        self._triggerAuthEvent()
       }
-    });
+    })
   }
-};
+}
 
-FirebaseAuth.prototype.getUserByEmail = function (email, onComplete) {
-  var err = this._nextErr('getUserByEmail');
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    var user = null;
-    err = err || self._validateExistingEmail(email);
+FirebaseAuth.prototype.getUserByEmail = function(email, onComplete) {
+  var err = this._nextErr('getUserByEmail')
+  var self = this
+  return new Promise(function(resolve, reject) {
+    var user = null
+    err = err || self._validateExistingEmail(email)
     if (!err) {
       user = _.find(self._auth.users, function(u) {
-        return u.email === email;
-      });
+        return u.email === email
+      })
       if (onComplete) {
-        onComplete(err, user.clone());
+        onComplete(err, user.clone())
       }
-      resolve(user.clone());
+      resolve(user.clone())
     } else {
       if (onComplete) {
-        onComplete(err, null);
+        onComplete(err, null)
       }
-      reject(err);
+      reject(err)
     }
-  });
-};
+  })
+}
 
-FirebaseAuth.prototype.getUser = function (uid, onComplete) {
-  var err = this._nextErr('getUser');
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    var user = null;
-    err = err || self._validateExistingUid(uid);
+FirebaseAuth.prototype.getUser = function(uid, onComplete) {
+  var err = this._nextErr('getUser')
+  var self = this
+  return new Promise(function(resolve, reject) {
+    var user = null
+    err = err || self._validateExistingUid(uid)
     if (!err) {
       user = _.find(self._auth.users, function(u) {
-        return u.uid == uid;
-      });
+        return u.uid == uid
+      })
       if (onComplete) {
-        onComplete(err, user.clone());
+        onComplete(err, user.clone())
       }
-      resolve(user.clone());
+      resolve(user.clone())
     } else {
       if (onComplete) {
-        onComplete(err, null);
+        onComplete(err, null)
       }
-      reject(err);
+      reject(err)
     }
-  });
-};
+  })
+}
 
 // number of arguments
 var authMethods = {
@@ -99,179 +99,187 @@ var authMethods = {
   authWithOAuthPopup: 2,
   authWithOAuthRedirect: 2,
   authWithOAuthToken: 3
-};
+}
 
-Object.keys(authMethods)
-  .forEach(function (method) {
-    var length = authMethods[method];
-    var callbackIndex = length - 1;
-    FirebaseAuth.prototype[method] = function () {
-      this._authEvent(method, arguments[callbackIndex]);
-    };
-  });
+Object.keys(authMethods).forEach(function(method) {
+  var length = authMethods[method]
+  var callbackIndex = length - 1
+  FirebaseAuth.prototype[method] = function() {
+    this._authEvent(method, arguments[callbackIndex])
+  }
+})
 
 var signinMethods = {
   signInWithCustomToken: function(authToken) {
     return {
       isAnonymous: false
-    };
+    }
   },
   signInAnonymously: function() {
     return {
       isAnonymous: true
-    };
+    }
   },
   signInWithEmailAndPassword: function(email, password) {
     return {
       isAnonymous: false,
       email: email
-    };
+    }
   },
   signInWithPopup: function(provider) {
     return {
       isAnonymous: false,
       providerData: [provider]
-    };
+    }
   },
   signInWithRedirect: function(provider) {
     return {
       isAnonymous: false,
       providerData: [provider]
-    };
+    }
   },
   signInWithCredential: function(credential) {
     return {
       isAnonymous: false
-    };
+    }
   }
-};
+}
 
-Object.keys(signinMethods)
-  .forEach(function (method) {
-    var getUser = signinMethods[method];
-    FirebaseAuth.prototype[method] = function () {
-      var self = this;
-      var user = getUser.apply(this, arguments);
-      var promise = new Promise(function(resolve, reject) {
-        self._authEvent(method, function(err) {
-          if (err) reject(err);
-          self.currentUser = user;
-          resolve(user);
-          self._triggerAuthEvent();
-        }, true);
-      });
-      return promise;
-    };
-  });
+Object.keys(signinMethods).forEach(function(method) {
+  var getUser = signinMethods[method]
+  FirebaseAuth.prototype[method] = function() {
+    var self = this
+    var user = getUser.apply(this, arguments)
+    var promise = new Promise(function(resolve, reject) {
+      self._authEvent(
+        method,
+        function(err) {
+          if (err) reject(err)
+          self.currentUser = user
+          resolve(user)
+          self._triggerAuthEvent()
+        },
+        true
+      )
+    })
+    return promise
+  }
+})
 
-FirebaseAuth.prototype.auth = function (token, callback) {
-  console.warn('FIREBASE WARNING: FirebaseRef.auth() being deprecated. Please use FirebaseRef.authWithCustomToken() instead.');
-  this._authEvent('auth', callback);
-};
+FirebaseAuth.prototype.auth = function(token, callback) {
+  console.warn(
+    'FIREBASE WARNING: FirebaseRef.auth() being deprecated. Please use FirebaseRef.authWithCustomToken() instead.'
+  )
+  this._authEvent('auth', callback)
+}
 
-FirebaseAuth.prototype._authEvent = function (method, callback, defercallback) {
-  var err = this._nextErr(method);
-  if (!callback) return;
+FirebaseAuth.prototype._authEvent = function(method, callback, defercallback) {
+  var err = this._nextErr(method)
+  if (!callback) return
   if (err) {
     // if an error occurs, we defer the error report until the next flush()
     // event is triggered
     this._defer('_authEvent', _.toArray(arguments), function() {
-      callback(err, null);
-    });
-  }
-  else {
+      callback(err, null)
+    })
+  } else {
     if (defercallback) {
       this._defer(method, _.toArray(arguments), function() {
-        callback();
-      });
+        callback()
+      })
     } else {
       // if there is no error, then we just add our callback to the listener
       // stack and wait for the next changeAuthState() call.
-      this._auth.completionListeners.push({fn: callback});
+      this._auth.completionListeners.push({ fn: callback })
     }
   }
-};
+}
 
-FirebaseAuth.prototype._triggerAuthEvent = function () {
-  var completionListeners = this._auth.completionListeners;
-  this._auth.completionListeners = [];
-  var user = this.currentUser;
-  completionListeners.forEach(function (parts) {
-    parts.fn.call(parts.context, null, _.cloneDeep(user));
-  });
-  var listeners = _.cloneDeep(this._auth.listeners);
-  listeners.forEach(function (parts) {
-    parts.fn.call(parts.context, _.cloneDeep(user));
-  });
-};
+FirebaseAuth.prototype._triggerAuthEvent = function() {
+  var completionListeners = this._auth.completionListeners
+  this._auth.completionListeners = []
+  var user = this.currentUser
+  completionListeners.forEach(function(parts) {
+    parts.fn.call(parts.context, null, _.cloneDeep(user))
+  })
+  var listeners = _.cloneDeep(this._auth.listeners)
+  listeners.forEach(function(parts) {
+    parts.fn.call(parts.context, _.cloneDeep(user))
+  })
+}
 
-FirebaseAuth.prototype.getAuth = function () {
-  return this.currentUser;
-};
+FirebaseAuth.prototype.getAuth = function() {
+  return this.currentUser
+}
 
-FirebaseAuth.prototype.onAuth = function (onComplete, context) {
+FirebaseAuth.prototype.onAuth = function(onComplete, context) {
   this._auth.listeners.push({
     fn: onComplete,
     context: context
-  });
-  onComplete.call(context, this.getAuth());
-};
+  })
+  onComplete.call(context, this.getAuth())
+}
 
-FirebaseAuth.prototype.offAuth = function (onComplete, context) {
-  var index = _.findIndex(this._auth.listeners, function (listener) {
-    return listener.fn === onComplete && listener.context === context;
-  });
+FirebaseAuth.prototype.offAuth = function(onComplete, context) {
+  var index = _.findIndex(this._auth.listeners, function(listener) {
+    return listener.fn === onComplete && listener.context === context
+  })
   if (index > -1) {
-    this._auth.listeners.splice(index, 1);
+    this._auth.listeners.splice(index, 1)
   }
-};
+}
 
-FirebaseAuth.prototype.unauth = function () {
+FirebaseAuth.prototype.unauth = function() {
   if (this.currentUser !== null) {
-    this.currentUser = null;
-    this._triggerAuthEvent();
+    this.currentUser = null
+    this._triggerAuthEvent()
   }
-};
+}
 
-FirebaseAuth.prototype.signOut = function () {
-  var self = this, updateuser = this.currentUser !== null;
+FirebaseAuth.prototype.signOut = function() {
+  var self = this,
+    updateuser = this.currentUser !== null
   var promise = new Promise(function(resolve, reject) {
-    self._authEvent('signOut', function(err) {
-      if (err) reject(err);
-      self.currentUser = null;
-      resolve();
+    self._authEvent(
+      'signOut',
+      function(err) {
+        if (err) reject(err)
+        self.currentUser = null
+        resolve()
 
-      if (updateuser) {
-        self._triggerAuthEvent();
-      }
-    }, true);
-  });
-  return promise;
-};
+        if (updateuser) {
+          self._triggerAuthEvent()
+        }
+      },
+      true
+    )
+  })
+  return promise
+}
 
-FirebaseAuth.prototype.createUserWithEmailAndPassword = function (email, password) {
+FirebaseAuth.prototype.createUserWithEmailAndPassword = function(
+  email,
+  password
+) {
   return this._createUser('createUserWithEmailAndPassword', {
     email: email,
     password: password
-  });
-};
+  })
+}
 
-FirebaseAuth.prototype.createUser = function (credentials, onComplete) {
-  validateCredentials('createUser', credentials, [
-    'email',
-    'password'
-  ]);
-  return this._createUser('createUser', credentials, onComplete);
-};
+FirebaseAuth.prototype.createUser = function(credentials, onComplete) {
+  validateCredentials('createUser', credentials, ['email'])
+  return this._createUser('createUser', credentials, onComplete)
+}
 
-FirebaseAuth.prototype._createUser = function (method, credentials, onComplete) {
-  var err = this._nextErr(method);
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    self._defer(method, _.toArray(arguments), function () {
-      var user = null;
-      err = err || self._validateNewEmail(credentials.email);
-      err = err || self._validateNewUid(credentials.uid);
+FirebaseAuth.prototype._createUser = function(method, credentials, onComplete) {
+  var err = this._nextErr(method)
+  var self = this
+  return new Promise(function(resolve, reject) {
+    self._defer(method, _.toArray(arguments), function() {
+      var user = null
+      err = err || self._validateNewEmail(credentials.email)
+      err = err || self._validateNewUid(credentials.uid)
       if (!err) {
         user = new User(this, {
           uid: credentials.uid || self._nextUid(),
@@ -281,301 +289,312 @@ FirebaseAuth.prototype._createUser = function (method, credentials, onComplete) 
           emailVerified: credentials.emailVerified,
           displayName: credentials.displayName,
           photoURL: credentials.photoURL
-        });
-        self._auth.users.push(user);
+        })
+        self._auth.users.push(user)
         if (onComplete) {
-          onComplete(err, user.clone());
+          onComplete(err, user.clone())
         }
-        resolve(user.clone());
+        resolve(user.clone())
       } else {
         if (onComplete) {
-          onComplete(err, null);
+          onComplete(err, null)
         }
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype.changeEmail = function (credentials, onComplete) {
+FirebaseAuth.prototype.changeEmail = function(credentials, onComplete) {
   validateCredentials('changeEmail', credentials, [
     'oldEmail',
     'newEmail',
     'password'
-  ]);
-  var err = this._nextErr('changeEmail');
-  var self = this;
+  ])
+  var err = this._nextErr('changeEmail')
+  var self = this
   return new Promise(function(resolve, reject) {
-    self._defer('changeEmail', _.toArray(arguments), function () {
-      err = err ||
+    self._defer('changeEmail', _.toArray(arguments), function() {
+      err =
+        err ||
         self._validateExistingEmail(credentials.oldEmail) ||
-        self._validPass(credentials.oldEmail, credentials.password);
+        self._validPass(credentials.oldEmail, credentials.password)
       if (!err) {
         var user = _.find(self._auth.users, function(u) {
-          return u.email === credentials.oldEmail;
-        });
-        user.email = credentials.newEmail;
+          return u.email === credentials.oldEmail
+        })
+        user.email = credentials.newEmail
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        resolve();
+        resolve()
       } else {
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype.changePassword = function (credentials, onComplete) {
+FirebaseAuth.prototype.changePassword = function(credentials, onComplete) {
   validateCredentials('changePassword', credentials, [
     'email',
     'oldPassword',
     'newPassword'
-  ]);
-  var err = this._nextErr('changePassword');
-  var self = this;
+  ])
+  var err = this._nextErr('changePassword')
+  var self = this
   return new Promise(function(resolve, reject) {
-    self._defer('changePassword', _.toArray(arguments), function () {
-      err = err ||
+    self._defer('changePassword', _.toArray(arguments), function() {
+      err =
+        err ||
         self._validateExistingEmail(credentials.email) ||
-        self._validPass(credentials.email, credentials.oldPassword);
+        self._validPass(credentials.email, credentials.oldPassword)
       if (!err) {
         var user = _.find(self._auth.users, function(u) {
-          return u.email === credentials.email;
-        });
-        user.password = credentials.newPassword;
+          return u.email === credentials.email
+        })
+        user.password = credentials.newPassword
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        resolve();
+        resolve()
       } else {
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype.deleteUser = function (uid) {
-  var err = this._nextErr('deleteUser');
-  var self = this;
+FirebaseAuth.prototype.deleteUser = function(uid) {
+  var err = this._nextErr('deleteUser')
+  var self = this
   return new Promise(function(resolve, reject) {
-    self._defer('deleteUser', _.toArray(arguments), function () {
+    self._defer('deleteUser', _.toArray(arguments), function() {
       if (!err) {
         _.remove(self._auth.users, function(u) {
-          return u.uid === uid;
-        });
+          return u.uid === uid
+        })
 
         if (self.currentUser && self.currentUser.uid === uid) {
-          self.currentUser = null;
+          self.currentUser = null
         }
-        resolve();
+        resolve()
       } else {
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype.removeUser = function (credentials, onComplete) {
-  validateCredentials('removeUser', credentials, [
-    'email',
-    'password'
-  ]);
-  var err = this._nextErr('removeUser');
-  var self = this;
+FirebaseAuth.prototype.removeUser = function(credentials, onComplete) {
+  validateCredentials('removeUser', credentials, ['email', 'password'])
+  var err = this._nextErr('removeUser')
+  var self = this
   return new Promise(function(resolve, reject) {
-    self._defer('removeUser', _.toArray(arguments), function () {
-      err = err ||
+    self._defer('removeUser', _.toArray(arguments), function() {
+      err =
+        err ||
         self._validateExistingEmail(credentials.email) ||
-        self._validPass(credentials.email, credentials.password);
+        self._validPass(credentials.email, credentials.password)
       if (!err) {
         _.remove(self._auth.users, function(u) {
-          return u.email === credentials.email;
-        });
+          return u.email === credentials.email
+        })
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        resolve();
+        resolve()
       } else {
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype.resetPassword = function (credentials, onComplete) {
-  validateCredentials('resetPassword', credentials, [
-    'email'
-  ]);
-  var err = this._nextErr('resetPassword');
-  var self = this;
-  return new Promise(function (resolve, reject) {
+FirebaseAuth.prototype.resetPassword = function(credentials, onComplete) {
+  validateCredentials('resetPassword', credentials, ['email'])
+  var err = this._nextErr('resetPassword')
+  var self = this
+  return new Promise(function(resolve, reject) {
     self._defer('resetPassword', _.toArray(arguments), function() {
-      err = err ||
-        self._validateExistingEmail(credentials.email);
+      err = err || self._validateExistingEmail(credentials.email)
       if (!err) {
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        resolve();
+        resolve()
       } else {
         if (onComplete) {
-          onComplete(err);
+          onComplete(err)
         }
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype.verifyIdToken = function (token) {
-  var err = this._nextErr('verifyIdToken');
-  var self = this;
-  return new Promise(function (resolve, reject) {
+FirebaseAuth.prototype.verifyIdToken = function(token) {
+  var err = this._nextErr('verifyIdToken')
+  var self = this
+  return new Promise(function(resolve, reject) {
     self._defer('verifyIdToken', _.toArray(arguments), function() {
       if (err) {
-        reject(err);
+        reject(err)
       } else {
         var user = _.find(self._auth.users, function(u) {
-          return u._idtoken === token;
-        });
+          return u._idtoken === token
+        })
         if (!user) {
-          reject(new Error('Cannot verify token'));
+          reject(new Error('Cannot verify token'))
         } else {
-          var customClaims = _.clone(user.customClaims);
-          customClaims.uid = user.uid;
-          customClaims.email = user.email;
-          customClaims.email_verified = user.emailVerified;
-          resolve(customClaims);
+          var customClaims = _.clone(user.customClaims)
+          customClaims.uid = user.uid
+          customClaims.email = user.email
+          customClaims.email_verified = user.emailVerified
+          resolve(customClaims)
         }
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype.setCustomUserClaims = function (uid, claims) {
-  var err = this._nextErr('setCustomUserClaims');
-  var self = this;
-  return new Promise(function (resolve, reject) {
+FirebaseAuth.prototype.setCustomUserClaims = function(uid, claims) {
+  var err = this._nextErr('setCustomUserClaims')
+  var self = this
+  return new Promise(function(resolve, reject) {
     self._defer('setCustomUserClaims', _.toArray(arguments), function() {
-      err = err || self._validateExistingUid(uid);
+      err = err || self._validateExistingUid(uid)
       if (err) {
-        reject(err);
+        reject(err)
       } else {
         var user = _.find(self._auth.users, function(u) {
-          return u.uid === uid;
-        });
-        user.customClaims = Object.assign({}, user.customClaims, claims);
-        resolve();
+          return u.uid === uid
+        })
+        user.customClaims = Object.assign({}, user.customClaims, claims)
+        resolve()
       }
-    });
-  });
-};
+    })
+  })
+}
 
-FirebaseAuth.prototype._nextUid = function () {
-  return 'simplelogin:' + (this._auth.uidCounter++);
-};
+FirebaseAuth.prototype._nextUid = function() {
+  return 'simplelogin:' + this._auth.uidCounter++
+}
 
-FirebaseAuth.prototype._validateNewUid = function (uid) {
+FirebaseAuth.prototype._validateNewUid = function(uid) {
   if (uid) {
     var user = _.find(this._auth.users, function(user) {
-      return user.uid == uid;
-    });
+      return user.uid == uid
+    })
     if (user) {
-      var err = new Error('The provided uid is already in use by an existing user. Each user must have a unique uid.');
-      err.code = 'auth/uid-already-exists';
-      return err;
+      var err = new Error(
+        'The provided uid is already in use by an existing user. Each user must have a unique uid.'
+      )
+      err.code = 'auth/uid-already-exists'
+      return err
     }
   }
-  return null;
-};
+  return null
+}
 
-FirebaseAuth.prototype._validateExistingUid = function (uid) {
+FirebaseAuth.prototype._validateExistingUid = function(uid) {
   if (uid) {
     var user = _.find(this._auth.users, function(user) {
-      return user.uid == uid;
-    });
+      return user.uid == uid
+    })
     if (!user) {
-      var err = new Error('There is no existing user record corresponding to the provided identifier.');
-      err.code = 'auth/user-not-found';
-      return err;
+      var err = new Error(
+        'There is no existing user record corresponding to the provided identifier.'
+      )
+      err.code = 'auth/user-not-found'
+      return err
     }
   }
-  return null;
-};
+  return null
+}
 
-FirebaseAuth.prototype._validateNewEmail = function (email) {
+FirebaseAuth.prototype._validateNewEmail = function(email) {
   var user = _.find(this._auth.users, function(u) {
-    return u.email === email;
-  });
+    return u.email === email
+  })
   if (user) {
-    var err = new Error('The provided email is already in use by an existing user. Each user must have a unique email.');
-    err.code = 'auth/email-already-exists';
-    return err;
+    var err = new Error(
+      'The provided email is already in use by an existing user. Each user must have a unique email.'
+    )
+    err.code = 'auth/email-already-exists'
+    return err
   }
-  return null;
-};
+  return null
+}
 
-FirebaseAuth.prototype._validateExistingEmail = function (email) {
+FirebaseAuth.prototype._validateExistingEmail = function(email) {
   var user = _.find(this._auth.users, function(u) {
-    return u.email === email;
-  });
+    return u.email === email
+  })
   if (!user) {
-    var err = new Error('There is no existing user record corresponding to the provided identifier.');
-    err.code = 'auth/user-not-found';
-    return err;
+    var err = new Error(
+      'There is no existing user record corresponding to the provided identifier.'
+    )
+    err.code = 'auth/user-not-found'
+    return err
   }
-  return null;
-};
+  return null
+}
 
-FirebaseAuth.prototype._validPass = function (email, pass) {
-  var err = null;
+FirebaseAuth.prototype._validPass = function(email, pass) {
+  var err = null
   var user = _.find(this._auth.users, function(u) {
-    return u.email === email;
-  });
+    return u.email === email
+  })
   if (pass !== user.password) {
-    err = new Error('The provided value for the password user property is invalid. It must be a string with at least six characters.');
-    err.code = 'auth/invalid-password';
+    err = new Error(
+      'The provided value for the password user property is invalid. It must be a string with at least six characters.'
+    )
+    err.code = 'auth/invalid-password'
   }
-  return err;
-};
-
-function validateCredentials (method, credentials, fields) {
-  validateObject(credentials, method, 'First');
-  fields.forEach(function (field) {
-    validateArgument(method, credentials, 'First', field, 'string');
-  });
+  return err
 }
 
-function validateObject (object, method, position) {
+function validateCredentials(method, credentials, fields) {
+  validateObject(credentials, method, 'First')
+  fields.forEach(function(field) {
+    validateArgument(method, credentials, 'First', field, 'string')
+  })
+}
+
+function validateObject(object, method, position) {
   if (!_.isObject(object)) {
-    throw new Error(format(
-      'Firebase.%s failed: %s argument must be a valid object.',
-      method,
-      position
-    ));
+    throw new Error(
+      format(
+        'Firebase.%s failed: %s argument must be a valid object.',
+        method,
+        position
+      )
+    )
   }
 }
 
-function validateArgument (method, object, position, name, type) {
+function validateArgument(method, object, position, name, type) {
   if (!object.hasOwnProperty(name) || typeof object[name] !== type) {
-    throw new Error(format(
-      'Firebase.%s failed: %s argument must contain the key "%s" with type "%s"',
-      method,
-      position,
-      name,
-      type
-    ));
+    throw new Error(
+      format(
+        'Firebase.%s failed: %s argument must contain the key "%s" with type "%s"',
+        method,
+        position,
+        name,
+        type
+      )
+    )
   }
 }
 
-module.exports = FirebaseAuth;
+module.exports = FirebaseAuth

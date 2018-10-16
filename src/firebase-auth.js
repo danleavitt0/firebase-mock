@@ -15,6 +15,20 @@ function FirebaseAuth() {
   }
 }
 
+FirebaseAuth.prototype.createCustomToken = function(uid) {
+  var err = this._nextErr('getUser')
+  var self = this
+  return new Promise(function(resolve, reject) {
+    var user = null
+    err = err || self._validateExistingUid(uid)
+    if (!err) {
+      resolve(Math.random().toString())
+    } else {
+      reject(err)
+    }
+  })
+}
+
 FirebaseAuth.prototype.changeAuthState = function(userData) {
   this._defer('changeAuthState', _.toArray(arguments), function() {
     if (!_.isEqual(this.currentUser, userData)) {

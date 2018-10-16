@@ -1,4 +1,4 @@
-/** 9dots-firebase-mock - v0.1.2
+/** 9dots-firebase-mock - v0.1.4
 https://github.com/soumak77/firebase-mock
 * Copyright (c) 2016 Brian Soumakian
 * License: MIT */
@@ -51742,6 +51742,20 @@ function FirebaseAuth() {
     users: [],
     uidCounter: 1
   }
+}
+
+FirebaseAuth.prototype.createCustomToken = function(uid) {
+  var err = this._nextErr('getUser')
+  var self = this
+  return new Promise(function(resolve, reject) {
+    var user = null
+    err = err || self._validateExistingUid(uid)
+    if (!err) {
+      resolve(Math.random().toString())
+    } else {
+      reject(err)
+    }
+  })
 }
 
 FirebaseAuth.prototype.changeAuthState = function(userData) {

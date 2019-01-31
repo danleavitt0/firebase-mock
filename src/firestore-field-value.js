@@ -19,4 +19,8 @@ MockFirestoreFieldValue.serverTimestamp = function () {
   return new MockFirestoreFieldValue('serverTimestamp');
 };
 
+MockFirestoreFieldValue.arrayUnion = function () {
+  return new MockFirestoreFieldValue('arrayUnion');
+}
+
 module.exports = MockFirestoreFieldValue;

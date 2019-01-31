@@ -1,4 +1,4 @@
-/** 9dots-firebase-mock - v0.1.4
+/** 9dots-firebase-mock - v0.1.6
 https://github.com/soumak77/firebase-mock
 * Copyright (c) 2016 Brian Soumakian
 * License: MIT */
@@ -53553,6 +53553,10 @@ MockFirestoreFieldValue.delete = function () {
 MockFirestoreFieldValue.serverTimestamp = function () {
   return new MockFirestoreFieldValue('serverTimestamp');
 };
+
+MockFirestoreFieldValue.arrayUnion = function () {
+  return new MockFirestoreFieldValue('arrayUnion');
+}
 
 module.exports = MockFirestoreFieldValue;
 

@@ -1,4 +1,4 @@
-/** 9dots-firebase-mock - v0.1.6
+/** 9dots-firebase-mock - v0.1.7
 https://github.com/soumak77/firebase-mock
 * Copyright (c) 2016 Brian Soumakian
 * License: MIT */
@@ -1276,6 +1276,7 @@ function fromByteArray (uint8) {
 },{}],7:[function(require,module,exports){
 arguments[4][6][0].apply(exports,arguments)
 },{"dup":6}],8:[function(require,module,exports){
+(function (Buffer){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -3054,7 +3055,8 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":5,"ieee754":13}],9:[function(require,module,exports){
+}).call(this,require("buffer").Buffer)
+},{"base64-js":5,"buffer":8,"ieee754":13}],9:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //

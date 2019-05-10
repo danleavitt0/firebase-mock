@@ -164,7 +164,7 @@ MockFirestoreDocument.prototype._update = function(changes, opts, callback) {
         var base = self._getData()
         var data
         if (_opts.setMerge) {
-          data = _.merge(_.isObject(base) ? base : {}, changes)
+          data = _.merge({}, _.isObject(base) ? base : {}, changes)
         } else {
           // check if changes contain no nested objects
           if (
@@ -177,12 +177,14 @@ MockFirestoreDocument.prototype._update = function(changes, opts, callback) {
           ) {
             // allow data to be merged, which allows merging of nested data
             data = _.merge(
+              {},
               _.isObject(base) ? base : {},
               utils.updateToFirestoreObject(changes)
             )
           } else {
             // don't allow data to be merged, which overwrite nested data
             data = _.mergeWith(
+              {},
               _.isObject(base) ? base : {},
               utils.updateToFirestoreObject(changes),
               (objValue, srcValue) => {
@@ -195,7 +197,7 @@ MockFirestoreDocument.prototype._update = function(changes, opts, callback) {
             )
           }
         }
-        data = utils.removeEmptyFirestoreProperties(data)
+        data = utils.removeEmptyFirestoreProperties(data, base)
         self._dataChanged(data)
         resolve(data)
       } else {

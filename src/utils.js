@@ -155,7 +155,7 @@ exports.removeEmptyFirestoreProperties = function removeEmptyFirestoreProperties
         obj[s] = new Date()
       }
       if (FieldValue.arrayUnion().isEqual(value)) {
-        obj[s] = (originalData[s] || []).concat(value.data)
+        obj[s] = _.union(originalData[s] || [], value.data)
       }
       if (FieldValue.arrayRemove().isEqual(value)) {
         obj[s] = _.difference(originalData[s] || [], value.data)

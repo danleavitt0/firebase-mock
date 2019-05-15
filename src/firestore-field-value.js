@@ -28,4 +28,8 @@ MockFirestoreFieldValue.arrayRemove = function(...data) {
   return new MockFirestoreFieldValue('arrayRemove', data)
 }
 
+MockFirestoreFieldValue.increment = function(n) {
+  return new MockFirestoreFieldValue('increment', n)
+}
+
 module.exports = MockFirestoreFieldValue

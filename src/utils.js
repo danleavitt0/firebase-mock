@@ -161,7 +161,7 @@ exports.removeEmptyFirestoreProperties = function removeEmptyFirestoreProperties
         obj[s] = _.difference(originalData[s] || [], value.data)
       }
       if (FieldValue.increment().isEqual(value)) {
-        obj[s] = obj[s] + value.data
+        obj[s] = originalData[s] + value.data
       }
     }
   }

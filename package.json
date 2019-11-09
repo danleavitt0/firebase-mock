@@ -1,6 +1,6 @@
 {
   "name": "9dots-firebase-mock",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Firebase mock library for writing unit tests",
   "main": "./src",
   "scripts": {

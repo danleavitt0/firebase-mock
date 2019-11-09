@@ -1,4 +1,4 @@
-/** 9dots-firebase-mock - v0.1.7
+/** 9dots-firebase-mock - v0.1.10
 https://github.com/soumak77/firebase-mock
 * Copyright (c) 2016 Brian Soumakian
 * License: MIT */
@@ -1118,7 +1118,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":3,"_process":53,"inherits":2}],5:[function(require,module,exports){
+},{"./support/isBuffer":3,"_process":54,"inherits":2}],5:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -45930,6 +45930,1191 @@ module.exports = toArray;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],52:[function(require,module,exports){
+(function (global){
+/**
+ * lodash (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+ * Released under MIT license <https://lodash.com/license>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ */
+
+/** Used as the size to enable large array optimizations. */
+var LARGE_ARRAY_SIZE = 200;
+
+/** Used to stand-in for `undefined` hash values. */
+var HASH_UNDEFINED = '__lodash_hash_undefined__';
+
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0,
+    MAX_SAFE_INTEGER = 9007199254740991;
+
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    funcTag = '[object Function]',
+    genTag = '[object GeneratorFunction]';
+
+/**
+ * Used to match `RegExp`
+ * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
+ */
+var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
+
+/** Used to detect host constructors (Safari). */
+var reIsHostCtor = /^\[object .+?Constructor\]$/;
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
+
+/**
+ * A faster alternative to `Function#apply`, this function invokes `func`
+ * with the `this` binding of `thisArg` and the arguments of `args`.
+ *
+ * @private
+ * @param {Function} func The function to invoke.
+ * @param {*} thisArg The `this` binding of `func`.
+ * @param {Array} args The arguments to invoke `func` with.
+ * @returns {*} Returns the result of `func`.
+ */
+function apply(func, thisArg, args) {
+  switch (args.length) {
+    case 0: return func.call(thisArg);
+    case 1: return func.call(thisArg, args[0]);
+    case 2: return func.call(thisArg, args[0], args[1]);
+    case 3: return func.call(thisArg, args[0], args[1], args[2]);
+  }
+  return func.apply(thisArg, args);
+}
+
+/**
+ * A specialized version of `_.includes` for arrays without support for
+ * specifying an index to search from.
+ *
+ * @private
+ * @param {Array} [array] The array to inspect.
+ * @param {*} target The value to search for.
+ * @returns {boolean} Returns `true` if `target` is found, else `false`.
+ */
+function arrayIncludes(array, value) {
+  var length = array ? array.length : 0;
+  return !!length && baseIndexOf(array, value, 0) > -1;
+}
+
+/**
+ * This function is like `arrayIncludes` except that it accepts a comparator.
+ *
+ * @private
+ * @param {Array} [array] The array to inspect.
+ * @param {*} target The value to search for.
+ * @param {Function} comparator The comparator invoked per element.
+ * @returns {boolean} Returns `true` if `target` is found, else `false`.
+ */
+function arrayIncludesWith(array, value, comparator) {
+  var index = -1,
+      length = array ? array.length : 0;
+
+  while (++index < length) {
+    if (comparator(value, array[index])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Appends the elements of `values` to `array`.
+ *
+ * @private
+ * @param {Array} array The array to modify.
+ * @param {Array} values The values to append.
+ * @returns {Array} Returns `array`.
+ */
+function arrayPush(array, values) {
+  var index = -1,
+      length = values.length,
+      offset = array.length;
+
+  while (++index < length) {
+    array[offset + index] = values[index];
+  }
+  return array;
+}
+
+/**
+ * The base implementation of `_.findIndex` and `_.findLastIndex` without
+ * support for iteratee shorthands.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {Function} predicate The function invoked per iteration.
+ * @param {number} fromIndex The index to search from.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function baseFindIndex(array, predicate, fromIndex, fromRight) {
+  var length = array.length,
+      index = fromIndex + (fromRight ? 1 : -1);
+
+  while ((fromRight ? index-- : ++index < length)) {
+    if (predicate(array[index], index, array)) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+/**
+ * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {*} value The value to search for.
+ * @param {number} fromIndex The index to search from.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function baseIndexOf(array, value, fromIndex) {
+  if (value !== value) {
+    return baseFindIndex(array, baseIsNaN, fromIndex);
+  }
+  var index = fromIndex - 1,
+      length = array.length;
+
+  while (++index < length) {
+    if (array[index] === value) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+/**
+ * The base implementation of `_.isNaN` without support for number objects.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is `NaN`, else `false`.
+ */
+function baseIsNaN(value) {
+  return value !== value;
+}
+
+/**
+ * Checks if a cache value for `key` exists.
+ *
+ * @private
+ * @param {Object} cache The cache to query.
+ * @param {string} key The key of the entry to check.
+ * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
+ */
+function cacheHas(cache, key) {
+  return cache.has(key);
+}
+
+/**
+ * Gets the value at `key` of `object`.
+ *
+ * @private
+ * @param {Object} [object] The object to query.
+ * @param {string} key The key of the property to get.
+ * @returns {*} Returns the property value.
+ */
+function getValue(object, key) {
+  return object == null ? undefined : object[key];
+}
+
+/**
+ * Checks if `value` is a host object in IE < 9.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a host object, else `false`.
+ */
+function isHostObject(value) {
+  // Many host objects are `Object` objects that can coerce to strings
+  // despite having improperly defined `toString` methods.
+  var result = false;
+  if (value != null && typeof value.toString != 'function') {
+    try {
+      result = !!(value + '');
+    } catch (e) {}
+  }
+  return result;
+}
+
+/**
+ * Converts `set` to an array of its values.
+ *
+ * @private
+ * @param {Object} set The set to convert.
+ * @returns {Array} Returns the values.
+ */
+function setToArray(set) {
+  var index = -1,
+      result = Array(set.size);
+
+  set.forEach(function(value) {
+    result[++index] = value;
+  });
+  return result;
+}
+
+/** Used for built-in method references. */
+var arrayProto = Array.prototype,
+    funcProto = Function.prototype,
+    objectProto = Object.prototype;
+
+/** Used to detect overreaching core-js shims. */
+var coreJsData = root['__core-js_shared__'];
+
+/** Used to detect methods masquerading as native. */
+var maskSrcKey = (function() {
+  var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
+  return uid ? ('Symbol(src)_1.' + uid) : '';
+}());
+
+/** Used to resolve the decompiled source of functions. */
+var funcToString = funcProto.toString;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/** Used to detect if a method is native. */
+var reIsNative = RegExp('^' +
+  funcToString.call(hasOwnProperty).replace(reRegExpChar, '\\$&')
+  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
+);
+
+/** Built-in value references. */
+var Symbol = root.Symbol,
+    propertyIsEnumerable = objectProto.propertyIsEnumerable,
+    splice = arrayProto.splice,
+    spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max;
+
+/* Built-in method references that are verified to be native. */
+var Map = getNative(root, 'Map'),
+    Set = getNative(root, 'Set'),
+    nativeCreate = getNative(Object, 'create');
+
+/**
+ * Creates a hash object.
+ *
+ * @private
+ * @constructor
+ * @param {Array} [entries] The key-value pairs to cache.
+ */
+function Hash(entries) {
+  var index = -1,
+      length = entries ? entries.length : 0;
+
+  this.clear();
+  while (++index < length) {
+    var entry = entries[index];
+    this.set(entry[0], entry[1]);
+  }
+}
+
+/**
+ * Removes all key-value entries from the hash.
+ *
+ * @private
+ * @name clear
+ * @memberOf Hash
+ */
+function hashClear() {
+  this.__data__ = nativeCreate ? nativeCreate(null) : {};
+}
+
+/**
+ * Removes `key` and its value from the hash.
+ *
+ * @private
+ * @name delete
+ * @memberOf Hash
+ * @param {Object} hash The hash to modify.
+ * @param {string} key The key of the value to remove.
+ * @returns {boolean} Returns `true` if the entry was removed, else `false`.
+ */
+function hashDelete(key) {
+  return this.has(key) && delete this.__data__[key];
+}
+
+/**
+ * Gets the hash value for `key`.
+ *
+ * @private
+ * @name get
+ * @memberOf Hash
+ * @param {string} key The key of the value to get.
+ * @returns {*} Returns the entry value.
+ */
+function hashGet(key) {
+  var data = this.__data__;
+  if (nativeCreate) {
+    var result = data[key];
+    return result === HASH_UNDEFINED ? undefined : result;
+  }
+  return hasOwnProperty.call(data, key) ? data[key] : undefined;
+}
+
+/**
+ * Checks if a hash value for `key` exists.
+ *
+ * @private
+ * @name has
+ * @memberOf Hash
+ * @param {string} key The key of the entry to check.
+ * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
+ */
+function hashHas(key) {
+  var data = this.__data__;
+  return nativeCreate ? data[key] !== undefined : hasOwnProperty.call(data, key);
+}
+
+/**
+ * Sets the hash `key` to `value`.
+ *
+ * @private
+ * @name set
+ * @memberOf Hash
+ * @param {string} key The key of the value to set.
+ * @param {*} value The value to set.
+ * @returns {Object} Returns the hash instance.
+ */
+function hashSet(key, value) {
+  var data = this.__data__;
+  data[key] = (nativeCreate && value === undefined) ? HASH_UNDEFINED : value;
+  return this;
+}
+
+// Add methods to `Hash`.
+Hash.prototype.clear = hashClear;
+Hash.prototype['delete'] = hashDelete;
+Hash.prototype.get = hashGet;
+Hash.prototype.has = hashHas;
+Hash.prototype.set = hashSet;
+
+/**
+ * Creates an list cache object.
+ *
+ * @private
+ * @constructor
+ * @param {Array} [entries] The key-value pairs to cache.
+ */
+function ListCache(entries) {
+  var index = -1,
+      length = entries ? entries.length : 0;
+
+  this.clear();
+  while (++index < length) {
+    var entry = entries[index];
+    this.set(entry[0], entry[1]);
+  }
+}
+
+/**
+ * Removes all key-value entries from the list cache.
+ *
+ * @private
+ * @name clear
+ * @memberOf ListCache
+ */
+function listCacheClear() {
+  this.__data__ = [];
+}
+
+/**
+ * Removes `key` and its value from the list cache.
+ *
+ * @private
+ * @name delete
+ * @memberOf ListCache
+ * @param {string} key The key of the value to remove.
+ * @returns {boolean} Returns `true` if the entry was removed, else `false`.
+ */
+function listCacheDelete(key) {
+  var data = this.__data__,
+      index = assocIndexOf(data, key);
+
+  if (index < 0) {
+    return false;
+  }
+  var lastIndex = data.length - 1;
+  if (index == lastIndex) {
+    data.pop();
+  } else {
+    splice.call(data, index, 1);
+  }
+  return true;
+}
+
+/**
+ * Gets the list cache value for `key`.
+ *
+ * @private
+ * @name get
+ * @memberOf ListCache
+ * @param {string} key The key of the value to get.
+ * @returns {*} Returns the entry value.
+ */
+function listCacheGet(key) {
+  var data = this.__data__,
+      index = assocIndexOf(data, key);
+
+  return index < 0 ? undefined : data[index][1];
+}
+
+/**
+ * Checks if a list cache value for `key` exists.
+ *
+ * @private
+ * @name has
+ * @memberOf ListCache
+ * @param {string} key The key of the entry to check.
+ * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
+ */
+function listCacheHas(key) {
+  return assocIndexOf(this.__data__, key) > -1;
+}
+
+/**
+ * Sets the list cache `key` to `value`.
+ *
+ * @private
+ * @name set
+ * @memberOf ListCache
+ * @param {string} key The key of the value to set.
+ * @param {*} value The value to set.
+ * @returns {Object} Returns the list cache instance.
+ */
+function listCacheSet(key, value) {
+  var data = this.__data__,
+      index = assocIndexOf(data, key);
+
+  if (index < 0) {
+    data.push([key, value]);
+  } else {
+    data[index][1] = value;
+  }
+  return this;
+}
+
+// Add methods to `ListCache`.
+ListCache.prototype.clear = listCacheClear;
+ListCache.prototype['delete'] = listCacheDelete;
+ListCache.prototype.get = listCacheGet;
+ListCache.prototype.has = listCacheHas;
+ListCache.prototype.set = listCacheSet;
+
+/**
+ * Creates a map cache object to store key-value pairs.
+ *
+ * @private
+ * @constructor
+ * @param {Array} [entries] The key-value pairs to cache.
+ */
+function MapCache(entries) {
+  var index = -1,
+      length = entries ? entries.length : 0;
+
+  this.clear();
+  while (++index < length) {
+    var entry = entries[index];
+    this.set(entry[0], entry[1]);
+  }
+}
+
+/**
+ * Removes all key-value entries from the map.
+ *
+ * @private
+ * @name clear
+ * @memberOf MapCache
+ */
+function mapCacheClear() {
+  this.__data__ = {
+    'hash': new Hash,
+    'map': new (Map || ListCache),
+    'string': new Hash
+  };
+}
+
+/**
+ * Removes `key` and its value from the map.
+ *
+ * @private
+ * @name delete
+ * @memberOf MapCache
+ * @param {string} key The key of the value to remove.
+ * @returns {boolean} Returns `true` if the entry was removed, else `false`.
+ */
+function mapCacheDelete(key) {
+  return getMapData(this, key)['delete'](key);
+}
+
+/**
+ * Gets the map value for `key`.
+ *
+ * @private
+ * @name get
+ * @memberOf MapCache
+ * @param {string} key The key of the value to get.
+ * @returns {*} Returns the entry value.
+ */
+function mapCacheGet(key) {
+  return getMapData(this, key).get(key);
+}
+
+/**
+ * Checks if a map value for `key` exists.
+ *
+ * @private
+ * @name has
+ * @memberOf MapCache
+ * @param {string} key The key of the entry to check.
+ * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
+ */
+function mapCacheHas(key) {
+  return getMapData(this, key).has(key);
+}
+
+/**
+ * Sets the map `key` to `value`.
+ *
+ * @private
+ * @name set
+ * @memberOf MapCache
+ * @param {string} key The key of the value to set.
+ * @param {*} value The value to set.
+ * @returns {Object} Returns the map cache instance.
+ */
+function mapCacheSet(key, value) {
+  getMapData(this, key).set(key, value);
+  return this;
+}
+
+// Add methods to `MapCache`.
+MapCache.prototype.clear = mapCacheClear;
+MapCache.prototype['delete'] = mapCacheDelete;
+MapCache.prototype.get = mapCacheGet;
+MapCache.prototype.has = mapCacheHas;
+MapCache.prototype.set = mapCacheSet;
+
+/**
+ *
+ * Creates an array cache object to store unique values.
+ *
+ * @private
+ * @constructor
+ * @param {Array} [values] The values to cache.
+ */
+function SetCache(values) {
+  var index = -1,
+      length = values ? values.length : 0;
+
+  this.__data__ = new MapCache;
+  while (++index < length) {
+    this.add(values[index]);
+  }
+}
+
+/**
+ * Adds `value` to the array cache.
+ *
+ * @private
+ * @name add
+ * @memberOf SetCache
+ * @alias push
+ * @param {*} value The value to cache.
+ * @returns {Object} Returns the cache instance.
+ */
+function setCacheAdd(value) {
+  this.__data__.set(value, HASH_UNDEFINED);
+  return this;
+}
+
+/**
+ * Checks if `value` is in the array cache.
+ *
+ * @private
+ * @name has
+ * @memberOf SetCache
+ * @param {*} value The value to search for.
+ * @returns {number} Returns `true` if `value` is found, else `false`.
+ */
+function setCacheHas(value) {
+  return this.__data__.has(value);
+}
+
+// Add methods to `SetCache`.
+SetCache.prototype.add = SetCache.prototype.push = setCacheAdd;
+SetCache.prototype.has = setCacheHas;
+
+/**
+ * Gets the index at which the `key` is found in `array` of key-value pairs.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {*} key The key to search for.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function assocIndexOf(array, key) {
+  var length = array.length;
+  while (length--) {
+    if (eq(array[length][0], key)) {
+      return length;
+    }
+  }
+  return -1;
+}
+
+/**
+ * The base implementation of `_.flatten` with support for restricting flattening.
+ *
+ * @private
+ * @param {Array} array The array to flatten.
+ * @param {number} depth The maximum recursion depth.
+ * @param {boolean} [predicate=isFlattenable] The function invoked per iteration.
+ * @param {boolean} [isStrict] Restrict to values that pass `predicate` checks.
+ * @param {Array} [result=[]] The initial result value.
+ * @returns {Array} Returns the new flattened array.
+ */
+function baseFlatten(array, depth, predicate, isStrict, result) {
+  var index = -1,
+      length = array.length;
+
+  predicate || (predicate = isFlattenable);
+  result || (result = []);
+
+  while (++index < length) {
+    var value = array[index];
+    if (depth > 0 && predicate(value)) {
+      if (depth > 1) {
+        // Recursively flatten arrays (susceptible to call stack limits).
+        baseFlatten(value, depth - 1, predicate, isStrict, result);
+      } else {
+        arrayPush(result, value);
+      }
+    } else if (!isStrict) {
+      result[result.length] = value;
+    }
+  }
+  return result;
+}
+
+/**
+ * The base implementation of `_.isNative` without bad shim checks.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a native function,
+ *  else `false`.
+ */
+function baseIsNative(value) {
+  if (!isObject(value) || isMasked(value)) {
+    return false;
+  }
+  var pattern = (isFunction(value) || isHostObject(value)) ? reIsNative : reIsHostCtor;
+  return pattern.test(toSource(value));
+}
+
+/**
+ * The base implementation of `_.rest` which doesn't validate or coerce arguments.
+ *
+ * @private
+ * @param {Function} func The function to apply a rest parameter to.
+ * @param {number} [start=func.length-1] The start position of the rest parameter.
+ * @returns {Function} Returns the new function.
+ */
+function baseRest(func, start) {
+  start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
+  return function() {
+    var args = arguments,
+        index = -1,
+        length = nativeMax(args.length - start, 0),
+        array = Array(length);
+
+    while (++index < length) {
+      array[index] = args[start + index];
+    }
+    index = -1;
+    var otherArgs = Array(start + 1);
+    while (++index < start) {
+      otherArgs[index] = args[index];
+    }
+    otherArgs[start] = array;
+    return apply(func, this, otherArgs);
+  };
+}
+
+/**
+ * The base implementation of `_.uniqBy` without support for iteratee shorthands.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {Function} [iteratee] The iteratee invoked per element.
+ * @param {Function} [comparator] The comparator invoked per element.
+ * @returns {Array} Returns the new duplicate free array.
+ */
+function baseUniq(array, iteratee, comparator) {
+  var index = -1,
+      includes = arrayIncludes,
+      length = array.length,
+      isCommon = true,
+      result = [],
+      seen = result;
+
+  if (comparator) {
+    isCommon = false;
+    includes = arrayIncludesWith;
+  }
+  else if (length >= LARGE_ARRAY_SIZE) {
+    var set = iteratee ? null : createSet(array);
+    if (set) {
+      return setToArray(set);
+    }
+    isCommon = false;
+    includes = cacheHas;
+    seen = new SetCache;
+  }
+  else {
+    seen = iteratee ? [] : result;
+  }
+  outer:
+  while (++index < length) {
+    var value = array[index],
+        computed = iteratee ? iteratee(value) : value;
+
+    value = (comparator || value !== 0) ? value : 0;
+    if (isCommon && computed === computed) {
+      var seenIndex = seen.length;
+      while (seenIndex--) {
+        if (seen[seenIndex] === computed) {
+          continue outer;
+        }
+      }
+      if (iteratee) {
+        seen.push(computed);
+      }
+      result.push(value);
+    }
+    else if (!includes(seen, computed, comparator)) {
+      if (seen !== result) {
+        seen.push(computed);
+      }
+      result.push(value);
+    }
+  }
+  return result;
+}
+
+/**
+ * Creates a set object of `values`.
+ *
+ * @private
+ * @param {Array} values The values to add to the set.
+ * @returns {Object} Returns the new set.
+ */
+var createSet = !(Set && (1 / setToArray(new Set([,-0]))[1]) == INFINITY) ? noop : function(values) {
+  return new Set(values);
+};
+
+/**
+ * Gets the data for `map`.
+ *
+ * @private
+ * @param {Object} map The map to query.
+ * @param {string} key The reference key.
+ * @returns {*} Returns the map data.
+ */
+function getMapData(map, key) {
+  var data = map.__data__;
+  return isKeyable(key)
+    ? data[typeof key == 'string' ? 'string' : 'hash']
+    : data.map;
+}
+
+/**
+ * Gets the native function at `key` of `object`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {string} key The key of the method to get.
+ * @returns {*} Returns the function if it's native, else `undefined`.
+ */
+function getNative(object, key) {
+  var value = getValue(object, key);
+  return baseIsNative(value) ? value : undefined;
+}
+
+/**
+ * Checks if `value` is a flattenable `arguments` object or array.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
+ */
+function isFlattenable(value) {
+  return isArray(value) || isArguments(value) ||
+    !!(spreadableSymbol && value && value[spreadableSymbol]);
+}
+
+/**
+ * Checks if `value` is suitable for use as unique object key.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is suitable, else `false`.
+ */
+function isKeyable(value) {
+  var type = typeof value;
+  return (type == 'string' || type == 'number' || type == 'symbol' || type == 'boolean')
+    ? (value !== '__proto__')
+    : (value === null);
+}
+
+/**
+ * Checks if `func` has its source masked.
+ *
+ * @private
+ * @param {Function} func The function to check.
+ * @returns {boolean} Returns `true` if `func` is masked, else `false`.
+ */
+function isMasked(func) {
+  return !!maskSrcKey && (maskSrcKey in func);
+}
+
+/**
+ * Converts `func` to its source code.
+ *
+ * @private
+ * @param {Function} func The function to process.
+ * @returns {string} Returns the source code.
+ */
+function toSource(func) {
+  if (func != null) {
+    try {
+      return funcToString.call(func);
+    } catch (e) {}
+    try {
+      return (func + '');
+    } catch (e) {}
+  }
+  return '';
+}
+
+/**
+ * Creates an array of unique values, in order, from all given arrays using
+ * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+ * for equality comparisons.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Array
+ * @param {...Array} [arrays] The arrays to inspect.
+ * @returns {Array} Returns the new array of combined values.
+ * @example
+ *
+ * _.union([2], [1, 2]);
+ * // => [2, 1]
+ */
+var union = baseRest(function(arrays) {
+  return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true));
+});
+
+/**
+ * Performs a
+ * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+ * comparison between two values to determine if they are equivalent.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to compare.
+ * @param {*} other The other value to compare.
+ * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
+ * @example
+ *
+ * var object = { 'a': 1 };
+ * var other = { 'a': 1 };
+ *
+ * _.eq(object, object);
+ * // => true
+ *
+ * _.eq(object, other);
+ * // => false
+ *
+ * _.eq('a', 'a');
+ * // => true
+ *
+ * _.eq('a', Object('a'));
+ * // => false
+ *
+ * _.eq(NaN, NaN);
+ * // => true
+ */
+function eq(value, other) {
+  return value === other || (value !== value && other !== other);
+}
+
+/**
+ * Checks if `value` is likely an `arguments` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+ *  else `false`.
+ * @example
+ *
+ * _.isArguments(function() { return arguments; }());
+ * // => true
+ *
+ * _.isArguments([1, 2, 3]);
+ * // => false
+ */
+function isArguments(value) {
+  // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
+  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+}
+
+/**
+ * Checks if `value` is classified as an `Array` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+ * @example
+ *
+ * _.isArray([1, 2, 3]);
+ * // => true
+ *
+ * _.isArray(document.body.children);
+ * // => false
+ *
+ * _.isArray('abc');
+ * // => false
+ *
+ * _.isArray(_.noop);
+ * // => false
+ */
+var isArray = Array.isArray;
+
+/**
+ * Checks if `value` is array-like. A value is considered array-like if it's
+ * not a function and has a `value.length` that's an integer greater than or
+ * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ * @example
+ *
+ * _.isArrayLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLike(document.body.children);
+ * // => true
+ *
+ * _.isArrayLike('abc');
+ * // => true
+ *
+ * _.isArrayLike(_.noop);
+ * // => false
+ */
+function isArrayLike(value) {
+  return value != null && isLength(value.length) && !isFunction(value);
+}
+
+/**
+ * This method is like `_.isArrayLike` except that it also checks if `value`
+ * is an object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array-like object,
+ *  else `false`.
+ * @example
+ *
+ * _.isArrayLikeObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLikeObject(document.body.children);
+ * // => true
+ *
+ * _.isArrayLikeObject('abc');
+ * // => false
+ *
+ * _.isArrayLikeObject(_.noop);
+ * // => false
+ */
+function isArrayLikeObject(value) {
+  return isObjectLike(value) && isArrayLike(value);
+}
+
+/**
+ * Checks if `value` is classified as a `Function` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a function, else `false`.
+ * @example
+ *
+ * _.isFunction(_);
+ * // => true
+ *
+ * _.isFunction(/abc/);
+ * // => false
+ */
+function isFunction(value) {
+  // The use of `Object#toString` avoids issues with the `typeof` operator
+  // in Safari 8-9 which returns 'object' for typed array and other constructors.
+  var tag = isObject(value) ? objectToString.call(value) : '';
+  return tag == funcTag || tag == genTag;
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This method is loosely based on
+ * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ * @example
+ *
+ * _.isLength(3);
+ * // => true
+ *
+ * _.isLength(Number.MIN_VALUE);
+ * // => false
+ *
+ * _.isLength(Infinity);
+ * // => false
+ *
+ * _.isLength('3');
+ * // => false
+ */
+function isLength(value) {
+  return typeof value == 'number' &&
+    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/**
+ * This method returns `undefined`.
+ *
+ * @static
+ * @memberOf _
+ * @since 2.3.0
+ * @category Util
+ * @example
+ *
+ * _.times(2, _.noop);
+ * // => [undefined, undefined]
+ */
+function noop() {
+  // No operation performed.
+}
+
+module.exports = union;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],53:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -45977,7 +47162,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 
 
 }).call(this,require('_process'))
-},{"_process":53}],53:[function(require,module,exports){
+},{"_process":54}],54:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -46163,10 +47348,10 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 module.exports = require('./lib/_stream_duplex.js');
 
-},{"./lib/_stream_duplex.js":55}],55:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":56}],56:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -46298,7 +47483,7 @@ Duplex.prototype._destroy = function (err, cb) {
 
   pna.nextTick(cb, err);
 };
-},{"./_stream_readable":57,"./_stream_writable":59,"core-util-is":9,"inherits":14,"process-nextick-args":52}],56:[function(require,module,exports){
+},{"./_stream_readable":58,"./_stream_writable":60,"core-util-is":9,"inherits":14,"process-nextick-args":53}],57:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -46346,7 +47531,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":58,"core-util-is":9,"inherits":14}],57:[function(require,module,exports){
+},{"./_stream_transform":59,"core-util-is":9,"inherits":14}],58:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -47368,7 +48553,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":55,"./internal/streams/BufferList":60,"./internal/streams/destroy":61,"./internal/streams/stream":62,"_process":53,"core-util-is":9,"events":10,"inherits":14,"isarray":63,"process-nextick-args":52,"safe-buffer":70,"string_decoder/":64,"util":6}],58:[function(require,module,exports){
+},{"./_stream_duplex":56,"./internal/streams/BufferList":61,"./internal/streams/destroy":62,"./internal/streams/stream":63,"_process":54,"core-util-is":9,"events":10,"inherits":14,"isarray":64,"process-nextick-args":53,"safe-buffer":71,"string_decoder/":65,"util":6}],59:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -47583,7 +48768,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":55,"core-util-is":9,"inherits":14}],59:[function(require,module,exports){
+},{"./_stream_duplex":56,"core-util-is":9,"inherits":14}],60:[function(require,module,exports){
 (function (process,global,setImmediate){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -48273,7 +49458,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"./_stream_duplex":55,"./internal/streams/destroy":61,"./internal/streams/stream":62,"_process":53,"core-util-is":9,"inherits":14,"process-nextick-args":52,"safe-buffer":70,"timers":72,"util-deprecate":73}],60:[function(require,module,exports){
+},{"./_stream_duplex":56,"./internal/streams/destroy":62,"./internal/streams/stream":63,"_process":54,"core-util-is":9,"inherits":14,"process-nextick-args":53,"safe-buffer":71,"timers":73,"util-deprecate":74}],61:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -48353,7 +49538,7 @@ if (util && util.inspect && util.inspect.custom) {
     return this.constructor.name + ' ' + obj;
   };
 }
-},{"safe-buffer":70,"util":6}],61:[function(require,module,exports){
+},{"safe-buffer":71,"util":6}],62:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -48428,17 +49613,17 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":52}],62:[function(require,module,exports){
+},{"process-nextick-args":53}],63:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":10}],63:[function(require,module,exports){
+},{"events":10}],64:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -48735,10 +49920,10 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":70}],65:[function(require,module,exports){
+},{"safe-buffer":71}],66:[function(require,module,exports){
 module.exports = require('./readable').PassThrough
 
-},{"./readable":66}],66:[function(require,module,exports){
+},{"./readable":67}],67:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -48747,13 +49932,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":55,"./lib/_stream_passthrough.js":56,"./lib/_stream_readable.js":57,"./lib/_stream_transform.js":58,"./lib/_stream_writable.js":59}],67:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":56,"./lib/_stream_passthrough.js":57,"./lib/_stream_readable.js":58,"./lib/_stream_transform.js":59,"./lib/_stream_writable.js":60}],68:[function(require,module,exports){
 module.exports = require('./readable').Transform
 
-},{"./readable":66}],68:[function(require,module,exports){
+},{"./readable":67}],69:[function(require,module,exports){
 module.exports = require('./lib/_stream_writable.js');
 
-},{"./lib/_stream_writable.js":59}],69:[function(require,module,exports){
+},{"./lib/_stream_writable.js":60}],70:[function(require,module,exports){
 (function (process,global,setImmediate){
 /*!
  * @overview RSVP - a tiny implementation of Promises/A+.
@@ -51302,7 +52487,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"_process":53,"timers":72}],70:[function(require,module,exports){
+},{"_process":54,"timers":73}],71:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -51366,7 +52551,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":8}],71:[function(require,module,exports){
+},{"buffer":8}],72:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -51495,7 +52680,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":10,"inherits":14,"readable-stream/duplex.js":54,"readable-stream/passthrough.js":65,"readable-stream/readable.js":66,"readable-stream/transform.js":67,"readable-stream/writable.js":68}],72:[function(require,module,exports){
+},{"events":10,"inherits":14,"readable-stream/duplex.js":55,"readable-stream/passthrough.js":66,"readable-stream/readable.js":67,"readable-stream/transform.js":68,"readable-stream/writable.js":69}],73:[function(require,module,exports){
 (function (setImmediate,clearImmediate){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -51574,7 +52759,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":53,"timers":72}],73:[function(require,module,exports){
+},{"process/browser.js":54,"timers":73}],74:[function(require,module,exports){
 (function (global){
 
 /**
@@ -51645,11 +52830,11 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],74:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 arguments[4][3][0].apply(exports,arguments)
-},{"dup":3}],75:[function(require,module,exports){
+},{"dup":3}],76:[function(require,module,exports){
 arguments[4][4][0].apply(exports,arguments)
-},{"./support/isBuffer":74,"_process":53,"dup":4,"inherits":14}],76:[function(require,module,exports){
+},{"./support/isBuffer":75,"_process":54,"dup":4,"inherits":14}],77:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -51728,7 +52913,7 @@ function extractName(path) {
 
 module.exports = MockAuthentication;
 
-},{"./firebase-auth":77,"./lodash":87,"./query":89,"./queue":90,"./snapshot":93,"./utils":99,"./validators":100,"assert":1,"firebase-auto-ids":12,"rsvp":69}],77:[function(require,module,exports){
+},{"./firebase-auth":78,"./lodash":88,"./query":90,"./queue":91,"./snapshot":94,"./utils":100,"./validators":101,"assert":1,"firebase-auto-ids":12,"rsvp":70}],78:[function(require,module,exports){
 'use strict'
 
 var _ = require('./lodash')
@@ -52344,544 +53529,581 @@ function validateArgument(method, object, position, name, type) {
 
 module.exports = FirebaseAuth
 
-},{"./lodash":87,"./user":98,"rsvp":69,"util":75}],78:[function(require,module,exports){
-'use strict';
+},{"./lodash":88,"./user":99,"rsvp":70,"util":76}],79:[function(require,module,exports){
+'use strict'
 
-var _ = require('./lodash');
-var assert = require('assert');
-var Promise = require('rsvp').Promise;
-var autoId = require('firebase-auto-ids');
-var Query = require('./query');
-var Snapshot = require('./snapshot');
-var Queue = require('./queue').Queue;
-var utils = require('./utils');
-var Auth = require('./firebase-auth');
-var validate = require('./validators');
+var _ = require('./lodash')
+var assert = require('assert')
+var Promise = require('rsvp').Promise
+var autoId = require('firebase-auto-ids')
+var Query = require('./query')
+var Snapshot = require('./snapshot')
+var Queue = require('./queue').Queue
+var utils = require('./utils')
+var Auth = require('./firebase-auth')
+var validate = require('./validators')
 
 function MockFirebase(path, data, parent, name) {
-  this.ref = this;
-  this.path = path || 'Mock://';
-  this.errs = {};
-  this.priority = null;
-  this.myName = parent ? name : extractName(path);
-  this.key = this.myName;
-  this.flushDelay = parent ? parent.flushDelay : false;
-  this.queue = parent ? parent.queue : new Queue();
+  this.ref = this
+  this.path = path || 'Mock://'
+  this.errs = {}
+  this.priority = null
+  this.myName = parent ? name : extractName(path)
+  this.key = this.myName
+  this.flushDelay = parent ? parent.flushDelay : false
+  this.queue = parent ? parent.queue : new Queue()
   this._events = {
     value: [],
     child_added: [],
     child_removed: [],
     child_changed: [],
     child_moved: []
-  };
-  this.parent = parent || null;
-  this.children = {};
-  if (parent) parent.children[this.key] = this;
-  this.root = this._getRoot();
-  this.sortedDataKeys = [];
-  this.data = null;
-  this._dataChanged(_.cloneDeep(data) || null);
-  this._lastAutoId = null;
-  _.extend(this, Auth.prototype, new Auth());
+  }
+  this.parent = parent || null
+  this.children = {}
+  if (parent) parent.children[this.key] = this
+  this.root = this._getRoot()
+  this.sortedDataKeys = []
+  this.data = null
+  this._dataChanged(_.cloneDeep(data) || null)
+  this._lastAutoId = null
+  _.extend(this, Auth.prototype, new Auth())
 }
 
 MockFirebase.ServerValue = {
   TIMESTAMP: {
     '.sv': 'timestamp'
   }
-};
+}
 
-var getServerTime, defaultClock;
-getServerTime = defaultClock = function () {
-  return new Date().getTime();
-};
+var getServerTime, defaultClock
+getServerTime = defaultClock = function() {
+  return new Date().getTime()
+}
 
-MockFirebase.setClock = function (fn) {
-  getServerTime = fn;
-};
+MockFirebase.setClock = function(fn) {
+  getServerTime = fn
+}
 
-MockFirebase.restoreClock = function () {
-  getServerTime = defaultClock;
-};
+MockFirebase.restoreClock = function() {
+  getServerTime = defaultClock
+}
 
-MockFirebase.autoId = function () {
-  return autoId(new Date().getTime());
-};
+MockFirebase.autoId = function() {
+  return autoId(new Date().getTime())
+}
 
-MockFirebase.prototype.flush = function (delay) {
-  this.queue.flush(delay);
-  return this;
-};
+MockFirebase.prototype.flush = function(delay) {
+  this.queue.flush(delay)
+  return this
+}
 
-MockFirebase.prototype.autoFlush = function (delay) {
+MockFirebase.prototype.autoFlush = function(delay) {
   if (_.isUndefined(delay)) {
-    delay = true;
+    delay = true
   }
   if (this.flushDelay !== delay) {
-    this.flushDelay = delay;
-    _.forEach(this.children, function (child) {
-      child.autoFlush(delay);
-    });
+    this.flushDelay = delay
+    _.forEach(this.children, function(child) {
+      child.autoFlush(delay)
+    })
     if (this.parent) {
-      this.parent.autoFlush(delay);
+      this.parent.autoFlush(delay)
     }
   }
-  return this;
-};
+  return this
+}
 
-MockFirebase.prototype.getFlushQueue = function () {
-  return this.queue.getEvents();
-};
+MockFirebase.prototype.getFlushQueue = function() {
+  return this.queue.getEvents()
+}
 
-MockFirebase.prototype.failNext = function (methodName, err) {
-  assert(err instanceof Error, 'err must be an "Error" object');
-  this.errs[methodName] = err;
-};
+MockFirebase.prototype.failNext = function(methodName, err) {
+  assert(err instanceof Error, 'err must be an "Error" object')
+  this.errs[methodName] = err
+}
 
-MockFirebase.prototype.forceCancel = function (error, event, callback, context) {
-  var self = this;
-  var events = this._events;
-  (event ? [event] : _.keys(events))
-    .forEach(function (eventName) {
-      events[eventName]
-        .filter(function (parts) {
-          return !event || !callback || (callback === parts[0] && context === parts[1]);
-        })
-        .forEach(function (parts) {
-          parts[2].call(parts[1], error);
-          self.off(event, callback, context);
-        });
-    });
-};
+MockFirebase.prototype.forceCancel = function(error, event, callback, context) {
+  var self = this
+  var events = this._events
+  ;(event ? [event] : _.keys(events)).forEach(function(eventName) {
+    events[eventName]
+      .filter(function(parts) {
+        return (
+          !event || !callback || (callback === parts[0] && context === parts[1])
+        )
+      })
+      .forEach(function(parts) {
+        parts[2].call(parts[1], error)
+        self.off(event, callback, context)
+      })
+  })
+}
 
-MockFirebase.prototype.getData = function () {
-  return _.cloneDeepWith(this.data, render);
-};
+MockFirebase.prototype.getData = function() {
+  return _.cloneDeepWith(this.data, render)
+}
 
-MockFirebase.prototype.getKeys = function () {
-  return this.sortedDataKeys.slice();
-};
+MockFirebase.prototype.getKeys = function() {
+  return this.sortedDataKeys.slice()
+}
 
-MockFirebase.prototype.fakeEvent = function (event, key, data, prevChild, priority) {
-  validate.event(event);
-  if (arguments.length < 5) priority = null;
-  if (arguments.length < 4) prevChild = null;
-  if (arguments.length < 3) data = null;
-  var ref = event === 'value' ? this : this.child(key);
-  var snapshot = new Snapshot(ref, data, priority);
-  this._defer('fakeEvent', _.toArray(arguments), function () {
+MockFirebase.prototype.fakeEvent = function(
+  event,
+  key,
+  data,
+  prevChild,
+  priority
+) {
+  validate.event(event)
+  if (arguments.length < 5) priority = null
+  if (arguments.length < 4) prevChild = null
+  if (arguments.length < 3) data = null
+  var ref = event === 'value' ? this : this.child(key)
+  var snapshot = new Snapshot(ref, data, priority)
+  this._defer('fakeEvent', _.toArray(arguments), function() {
     this._events[event]
-      .map(function (parts) {
+      .map(function(parts) {
         return {
           fn: parts[0],
           args: [snapshot],
           context: parts[1]
-        };
-      })
-      .forEach(function (data) {
-        if ('child_added' === event || 'child_moved' === event) {
-          data.args.push(prevChild);
         }
-        data.fn.apply(data.context, data.args);
-      });
-  });
-  return this;
-};
+      })
+      .forEach(function(data) {
+        if ('child_added' === event || 'child_moved' === event) {
+          data.args.push(prevChild)
+        }
+        data.fn.apply(data.context, data.args)
+      })
+  })
+  return this
+}
 
-MockFirebase.prototype.toString = function () {
-  return this.path;
-};
+MockFirebase.prototype.toString = function() {
+  return this.path
+}
 
-MockFirebase.prototype.child = function (childPath) {
-  assert(childPath, 'A child path is required');
-  var parts = _.compact(childPath.split('/'));
-  var childKey = parts.shift();
-  var child = this.children[childKey];
+MockFirebase.prototype.child = function(childPath) {
+  assert(childPath, 'A child path is required')
+  var parts = _.compact(childPath.split('/'))
+  var childKey = parts.shift()
+  var child = this.children[childKey]
   if (!child) {
-    child = new MockFirebase(utils.mergePaths(this.path, childKey), this._childData(childKey), this, childKey);
-    this.children[child.key] = child;
+    child = new MockFirebase(
+      utils.mergePaths(this.path, childKey),
+      this._childData(childKey),
+      this,
+      childKey
+    )
+    this.children[child.key] = child
   }
   if (parts.length) {
-    child = child.child(parts.join('/'));
+    child = child.child(parts.join('/'))
   }
-  return child;
-};
+  return child
+}
 
-MockFirebase.prototype.set = function (data, callback) {
-  validate.data(data);
-  var err = this._nextErr('set');
-  data = _.cloneDeep(data);
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    self._defer('set', _.toArray(arguments), function () {
+MockFirebase.prototype.set = function(data, callback) {
+  validate.data(data)
+  var err = this._nextErr('set')
+  data = _.cloneDeep(data)
+  var self = this
+  return new Promise(function(resolve, reject) {
+    self._defer('set', _.toArray(arguments), function() {
       if (err === null) {
-        data = utils.removeEmptyRtdbProperties(data);
-        self._dataChanged(data);
-        resolve(data);
+        data = utils.removeEmptyRtdbProperties(data)
+        self._dataChanged(data)
+        resolve(data)
       } else {
         if (callback) {
-          callback(err);
+          callback(err)
         }
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-MockFirebase.prototype.update = function (changes, callback) {
-  assert.equal(typeof changes, 'object', 'First argument must be an object when calling "update"');
-  validate.data(changes);
-  var err = this._nextErr('update');
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    self._defer('update', _.toArray(arguments), function () {
+MockFirebase.prototype.update = function(changes, callback) {
+  assert.equal(
+    typeof changes,
+    'object',
+    'First argument must be an object when calling "update"'
+  )
+  validate.data(changes)
+  var err = this._nextErr('update')
+  var self = this
+  return new Promise(function(resolve, reject) {
+    self._defer('update', _.toArray(arguments), function() {
       if (!err) {
-        var base = self.getData();
-        var data = _.isObject(base) ? base : {};
+        var base = self.getData()
+        var data = _.isObject(base) ? base : {}
         // operate as a multi-set
-        _.keys(changes).forEach(function (key) {
-          var val = changes[key];
-          _.set(data, key.replace(/\//g, '.'), _.isObject(val) ? utils.updateToRtdbObject(val) : val);
-        });
-        data = utils.removeEmptyRtdbProperties(data);
-        self._dataChanged(data);
-        resolve(data);
+        _.keys(changes).forEach(function(key) {
+          var val = changes[key]
+          _.set(
+            data,
+            key.replace(/\//g, '.'),
+            _.isObject(val) ? utils.updateToRtdbObject(val) : val
+          )
+        })
+        data = utils.removeEmptyRtdbProperties(data)
+        self._dataChanged(data)
+        resolve(data)
       } else {
         if (callback) {
-          callback(err);
+          callback(err)
         }
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-MockFirebase.prototype.setPriority = function (newPriority, callback) {
-  var err = this._nextErr('setPriority');
-  this._defer('setPriority', _.toArray(arguments), function () {
-    this._priChanged(newPriority);
-    if (callback) callback(err);
-  });
-};
+MockFirebase.prototype.setPriority = function(newPriority, callback) {
+  var err = this._nextErr('setPriority')
+  this._defer('setPriority', _.toArray(arguments), function() {
+    this._priChanged(newPriority)
+    if (callback) callback(err)
+  })
+}
 
-MockFirebase.prototype.setWithPriority = function (data, pri, callback) {
-  this.setPriority(pri);
-  this.set(data, callback);
-};
+MockFirebase.prototype.setWithPriority = function(data, pri, callback) {
+  this.setPriority(pri)
+  this.set(data, callback)
+}
 
 /* istanbul ignore next */
-MockFirebase.prototype.name = function () {
-  console.warn('ref.name() is deprecated. Use ref.key');
-  return this.key;
-};
+MockFirebase.prototype.name = function() {
+  console.warn('ref.name() is deprecated. Use ref.key')
+  return this.key
+}
 
-MockFirebase.prototype._getRoot = function () {
-  var next = this;
+MockFirebase.prototype._getRoot = function() {
+  var next = this
   while (next.parent) {
-    next = next.parent;
+    next = next.parent
   }
-  return next;
-};
+  return next
+}
 
-MockFirebase.prototype.push = function (data, callback) {
-  var child = this.child(this._newAutoId());
-  var err = this._nextErr('push');
-  if (err) child.failNext('set', err);
+MockFirebase.prototype.push = function(data, callback) {
+  var child = this.child(this._newAutoId())
+  var err = this._nextErr('push')
+  if (err) child.failNext('set', err)
   if (arguments.length && data !== null) {
     // currently, callback only invoked if child exists
-    validate.data(data);
-    return utils.createThenableReference(child, child.set(data, callback));
+    validate.data(data)
+    return utils.createThenableReference(child, child.set(data, callback))
   } else {
-    return utils.createThenableReference(child, Promise.resolve(child));
+    return utils.createThenableReference(child, Promise.resolve(child))
   }
-};
+}
 
-MockFirebase.prototype.once = function (event, callback, cancel, context) {
-  validate.event(event);
+MockFirebase.prototype.once = function(event, callback, cancel, context) {
+  validate.event(event)
   if (arguments.length === 3 && !_.isFunction(cancel)) {
-    context = cancel;
-    cancel = _.noop;
+    context = cancel
+    cancel = _.noop
   }
-  cancel = cancel || _.noop;
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    var err = self._nextErr('once');
+  cancel = cancel || _.noop
+  var self = this
+  return new Promise(function(resolve, reject) {
+    var err = self._nextErr('once')
     if (err) {
-      self._defer('once', _.toArray(arguments), function () {
+      self._defer('once', _.toArray(arguments), function() {
         if (cancel) {
-          cancel.call(context, err);
+          cancel.call(context, err)
         }
-        reject(err);
-      });
-    }
-    else {
-      var fn = _.bind(function (snapshot) {
-        self.off(event, fn, context);
+        reject(err)
+      })
+    } else {
+      var fn = _.bind(function(snapshot) {
+        self.off(event, fn, context)
         if (callback) {
-          callback.call(context, snapshot);
+          callback.call(context, snapshot)
         }
-        resolve(snapshot);
-      }, self);
-      self._on('once', event, fn, cancel, context);
+        resolve(snapshot)
+      }, self)
+      self._on('once', event, fn, cancel, context)
     }
-  });
-};
+  })
+}
 
-MockFirebase.prototype.remove = function (callback) {
-  var err = this._nextErr('remove');
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    self._defer('remove', _.toArray(arguments), function () {
-      if (callback) callback(err);
+MockFirebase.prototype.remove = function(callback) {
+  var err = this._nextErr('remove')
+  var self = this
+  return new Promise(function(resolve, reject) {
+    self._defer('remove', _.toArray(arguments), function() {
+      if (callback) callback(err)
       if (err === null) {
-        self._dataChanged(null);
-        resolve(null);
+        self._dataChanged(null)
+        resolve(null)
       } else {
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
-MockFirebase.prototype.on = function (event, callback, cancel, context) {
-  validate.event(event);
+MockFirebase.prototype.on = function(event, callback, cancel, context) {
+  validate.event(event)
   if (arguments.length === 3 && typeof cancel !== 'function') {
-    context = cancel;
-    cancel = _.noop;
+    context = cancel
+    cancel = _.noop
   }
-  cancel = cancel || _.noop;
+  cancel = cancel || _.noop
 
-  var err = this._nextErr('on');
+  var err = this._nextErr('on')
   if (err) {
-    this._defer('on', _.toArray(arguments), function () {
-      cancel.call(context, err);
-    });
+    this._defer('on', _.toArray(arguments), function() {
+      cancel.call(context, err)
+    })
+  } else {
+    this._on('on', event, callback, cancel, context)
   }
-  else {
-    this._on('on', event, callback, cancel, context);
-  }
-  return callback;
-};
+  return callback
+}
 
-MockFirebase.prototype.off = function (event, callback, context) {
+MockFirebase.prototype.off = function(event, callback, context) {
   if (!event) {
     for (var key in this._events) {
       /* istanbul ignore else */
       if (this._events.hasOwnProperty(key)) {
-        this.off(key);
+        this.off(key)
       }
     }
-  }
-  else {
-    validate.event(event);
+  } else {
+    validate.event(event)
     if (callback) {
-      var events = this._events[event];
-      var newEvents = this._events[event] = [];
-      _.forEach(events, function (parts) {
+      var events = this._events[event]
+      var newEvents = (this._events[event] = [])
+      _.forEach(events, function(parts) {
         if (parts[0] !== callback || parts[1] !== context) {
-          newEvents.push(parts);
+          newEvents.push(parts)
         }
-      });
-    }
-    else {
-      this._events[event] = [];
+      })
+    } else {
+      this._events[event] = []
     }
   }
-};
+}
 
-MockFirebase.prototype.transaction = function (valueFn, finishedFn, applyLocally) {
-  var err = this._nextErr('transaction');
-  var res = valueFn(this.getData());
-  var newData = _.isUndefined(res) || err ? this.getData() : res;
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    self._defer('transaction', _.toArray(arguments), function () {
-      newData = utils.removeEmptyRtdbProperties(newData);
-      self._dataChanged(newData);
+MockFirebase.prototype.transaction = function(
+  valueFn,
+  finishedFn,
+  applyLocally
+) {
+  var err = this._nextErr('transaction')
+  var res = valueFn(this.getData())
+  var newData = _.isUndefined(res) || err ? this.getData() : res
+  var self = this
+  return new Promise(function(resolve, reject) {
+    self._defer('transaction', _.toArray(arguments), function() {
+      newData = utils.removeEmptyRtdbProperties(newData)
+      self._dataChanged(newData)
       if (typeof finishedFn === 'function') {
-        finishedFn(err, err === null && !_.isUndefined(res), new Snapshot(self, newData, self.priority));
+        finishedFn(
+          err,
+          err === null && !_.isUndefined(res),
+          new Snapshot(self, newData, self.priority)
+        )
       }
       if (err === null) {
-        resolve({committed: err === null && !_.isUndefined(res), snapshot: new Snapshot(self, newData, self.priority)});
+        resolve({
+          committed: err === null && !_.isUndefined(res),
+          snapshot: new Snapshot(self, newData, self.priority)
+        })
       } else {
-        reject(err);
+        reject(err)
       }
-    });
-  });
-};
+    })
+  })
+}
 
 /**
  * Just a stub at this point.
  * @param {int} limit
  */
-MockFirebase.prototype.limit = function (limit) {
-  return new Query(this).limitToLast(limit);
-};
+MockFirebase.prototype.limit = function(limit) {
+  return new Query(this).limitToLast(limit)
+}
 
 /**
  * Just a stub so it can be spied on during testing
  */
-MockFirebase.prototype.limitToFirst = function (limit) {
-  return new Query(this).limitToFirst(limit);
-};
+MockFirebase.prototype.limitToFirst = function(limit) {
+  return new Query(this).limitToFirst(limit)
+}
 
 /**
  * Just a stub so it can be spied on during testing
  */
-MockFirebase.prototype.limitToLast = function (limit) {
-  return new Query(this).limitToLast(limit);
-};
+MockFirebase.prototype.limitToLast = function(limit) {
+  return new Query(this).limitToLast(limit)
+}
 
 /**
  * Just a stub so it can be spied on during testing
  */
-MockFirebase.prototype.orderByChild = function (child) {
-  console.warn("orderByChild() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.");
-  return new Query(this);
-};
+MockFirebase.prototype.orderByChild = function(child) {
+  console.warn(
+    'orderByChild() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.'
+  )
+  return new Query(this)
+}
 
 /**
  * Just a stub so it can be spied on during testing
  */
-MockFirebase.prototype.orderByKey = function (key) {
-  console.warn("orderByKey() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.");
-  return new Query(this);
-};
+MockFirebase.prototype.orderByKey = function(key) {
+  console.warn(
+    'orderByKey() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.'
+  )
+  return new Query(this)
+}
 
 /**
  * Just a stub so it can be spied on during testing
  */
-MockFirebase.prototype.orderByPriority = function (property) {
-  console.warn("orderByPriority() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.");
-  return new Query(this);
-};
+MockFirebase.prototype.orderByPriority = function(property) {
+  console.warn(
+    'orderByPriority() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.'
+  )
+  return new Query(this)
+}
 
 /**
  * Just a stub so it can be spied on during testing
  */
-MockFirebase.prototype.orderByValue = function (value) {
-  console.warn("orderByValue() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.");
-  return new Query(this);
-};
+MockFirebase.prototype.orderByValue = function(value) {
+  console.warn(
+    'orderByValue() is not supported by firebase-mock.  You will need to use spies to test this functionality.  Please refer to the firebase-mock README for more info.'
+  )
+  return new Query(this)
+}
 
-MockFirebase.prototype.startAt = function (priority, key) {
-  return new Query(this).startAt(priority, key);
-};
+MockFirebase.prototype.startAt = function(priority, key) {
+  return new Query(this).startAt(priority, key)
+}
 
-MockFirebase.prototype.endAt = function (priority, key) {
-  return new Query(this).endAt(priority, key);
-};
+MockFirebase.prototype.endAt = function(priority, key) {
+  return new Query(this).endAt(priority, key)
+}
 
-MockFirebase.prototype.equalTo = function (priority, key) {
-  return new Query(this).equalTo(priority, key);
-};
+MockFirebase.prototype.equalTo = function(priority, key) {
+  return new Query(this).equalTo(priority, key)
+}
 
-MockFirebase.prototype._childChanged = function (ref) {
-  var events = [];
-  var childKey = ref.key;
-  var data = ref.getData();
+MockFirebase.prototype._childChanged = function(ref) {
+  var events = []
+  var childKey = ref.key
+  var data = ref.getData()
   if (data === null) {
-    this._removeChild(childKey, events);
+    this._removeChild(childKey, events)
+  } else {
+    this._updateOrAdd(childKey, data, events)
   }
-  else {
-    this._updateOrAdd(childKey, data, events);
-  }
-  this._triggerAll(events);
-};
+  this._triggerAll(events)
+}
 
-MockFirebase.prototype._dataChanged = function (unparsedData) {
-  var self = this;
-  var pri = utils.getMeta(unparsedData, 'priority', this.priority);
-  var data = utils.cleanData(unparsedData);
+MockFirebase.prototype._dataChanged = function(unparsedData) {
+  var self = this
+  var pri = utils.getMeta(unparsedData, 'priority', this.priority)
+  var data = utils.cleanData(unparsedData)
 
   if (utils.isServerTimestamp(data)) {
-    data = getServerTime();
+    data = getServerTime()
   }
 
   if (pri !== this.priority) {
-    this._priChanged(pri);
+    this._priChanged(pri)
   }
   if (!_.isEqual(data, this.data)) {
     // _.keys() in Lodash 3 automatically coerces non-object to object
-    var oldKeys = _.isObject(this.data) ? _.keys(this.data).sort() : [];
-    var newKeys = _.isObject(data) ? _.keys(data).sort() : [];
-    var keysToRemove = _.difference(oldKeys, newKeys);
-    var keysToChange = _.difference(newKeys, keysToRemove);
-    var events = [];
+    var oldKeys = _.isObject(this.data) ? _.keys(this.data).sort() : []
+    var newKeys = _.isObject(data) ? _.keys(data).sort() : []
+    var keysToRemove = _.difference(oldKeys, newKeys)
+    var keysToChange = _.difference(newKeys, keysToRemove)
+    var events = []
 
-    keysToRemove.forEach(function (key) {
-      self._removeChild(key, events);
-    });
+    keysToRemove.forEach(function(key) {
+      self._removeChild(key, events)
+    })
 
     if (!_.isObject(data)) {
-      events.push(false);
-      this.data = data;
-    }
-    else {
-      keysToChange.forEach(function (key) {
-        var childData = unparsedData[key];
+      events.push(false)
+      this.data = data
+    } else {
+      keysToChange.forEach(function(key) {
+        var childData = unparsedData[key]
         if (utils.isServerTimestamp(childData)) {
-          childData = getServerTime();
+          childData = getServerTime()
         }
-        self._updateOrAdd(key, childData, events);
-      });
+        self._updateOrAdd(key, childData, events)
+      })
     }
 
     // update order of my child keys
-    if (_.isObject(this.data))
-      this._resort();
+    if (_.isObject(this.data)) this._resort()
 
     // trigger parent notifications after all children have
     // been processed
-    this._triggerAll(events);
+    this._triggerAll(events)
   }
-};
+}
 
-MockFirebase.prototype._priChanged = function (newPriority) {
+MockFirebase.prototype._priChanged = function(newPriority) {
   if (utils.isServerTimestamp(newPriority)) {
-    newPriority = getServerTime();
+    newPriority = getServerTime()
   }
-  this.priority = newPriority;
+  this.priority = newPriority
   if (this.parent) {
-    this.parent._resort(this.key);
+    this.parent._resort(this.key)
   }
-};
+}
 
-MockFirebase.prototype._getPri = function (key) {
-  return _.has(this.children, key) ? this.children[key].priority : null;
-};
+MockFirebase.prototype._getPri = function(key) {
+  return _.has(this.children, key) ? this.children[key].priority : null
+}
 
-MockFirebase.prototype._resort = function (childKeyMoved) {
-  var self = this;
-  this.sortedDataKeys.sort(_.bind(this.childComparator, this));
+MockFirebase.prototype._resort = function(childKeyMoved) {
+  var self = this
+  this.sortedDataKeys.sort(_.bind(this.childComparator, this))
   // resort the data object to match our keys so value events return ordered content
-  var oldData = _.assign({}, this.data);
-  _.forEach(oldData, function (v, k) {
-    delete self.data[k];
-  });
-  _.forEach(this.sortedDataKeys, function (k) {
-    self.data[k] = oldData[k];
-  });
+  var oldData = _.assign({}, this.data)
+  _.forEach(oldData, function(v, k) {
+    delete self.data[k]
+  })
+  _.forEach(this.sortedDataKeys, function(k) {
+    self.data[k] = oldData[k]
+  })
   if (!_.isUndefined(childKeyMoved) && _.has(this.data, childKeyMoved)) {
-    this._trigger('child_moved', this.data[childKeyMoved], this._getPri(childKeyMoved), childKeyMoved);
+    this._trigger(
+      'child_moved',
+      this.data[childKeyMoved],
+      this._getPri(childKeyMoved),
+      childKeyMoved
+    )
   }
-};
+}
 
-MockFirebase.prototype._addKey = function (newKey) {
+MockFirebase.prototype._addKey = function(newKey) {
   if (_.indexOf(this.sortedDataKeys, newKey) === -1) {
-    this.sortedDataKeys.push(newKey);
-    this._resort();
+    this.sortedDataKeys.push(newKey)
+    this._resort()
   }
-};
+}
 
-MockFirebase.prototype._dropKey = function (key) {
-  var i = _.indexOf(this.sortedDataKeys, key);
+MockFirebase.prototype._dropKey = function(key) {
+  var i = _.indexOf(this.sortedDataKeys, key)
   if (i > -1) {
-    this.sortedDataKeys.splice(i, 1);
+    this.sortedDataKeys.splice(i, 1)
   }
-};
+}
 
-MockFirebase.prototype._defer = function (sourceMethod, sourceArgs, callback) {
+MockFirebase.prototype._defer = function(sourceMethod, sourceArgs, callback) {
   this.queue.push({
     fn: callback,
     context: this,
@@ -52890,191 +54112,206 @@ MockFirebase.prototype._defer = function (sourceMethod, sourceArgs, callback) {
       method: sourceMethod,
       args: sourceArgs
     }
-  });
+  })
   if (this.flushDelay !== false) {
-    this.flush(this.flushDelay);
+    this.flush(this.flushDelay)
   }
-};
+}
 
-MockFirebase.prototype._trigger = function (event, data, pri, key) {
-  var self = this;
-  var ref = event === 'value' ? this : this.child(key);
-  var snap = new Snapshot(ref, data, pri);
-  _.forEach(this._events[event], function (parts) {
-    var fn = parts[0], context = parts[1];
+MockFirebase.prototype._trigger = function(event, data, pri, key) {
+  var self = this
+  var ref = event === 'value' ? this : this.child(key)
+  var snap = new Snapshot(ref, data, pri)
+  _.forEach(this._events[event], function(parts) {
+    var fn = parts[0],
+      context = parts[1]
     if (_.includes(['child_added', 'child_moved'], event)) {
-      fn.call(context, snap, self._getPrevChild(key));
+      fn.call(context, snap, self._getPrevChild(key))
+    } else {
+      fn.call(context, snap)
     }
-    else {
-      fn.call(context, snap);
-    }
-  });
-};
+  })
+}
 
-MockFirebase.prototype._triggerAll = function (events) {
-  var self = this;
-  if (!events.length) return;
-  events.forEach(function (event) {
-    if (event !== false) self._trigger.apply(self, event);
-  });
-  this._trigger('value', this.data, this.priority);
+MockFirebase.prototype._triggerAll = function(events) {
+  var self = this
+  if (!events.length) return
+  events.forEach(function(event) {
+    if (event !== false) self._trigger.apply(self, event)
+  })
+  this._trigger('value', this.data, this.priority)
   if (this.parent) {
-    this.parent._childChanged(this);
+    this.parent._childChanged(this)
   }
-};
+}
 
-MockFirebase.prototype._updateOrAdd = function (key, data, events) {
-  var exists = _.isObject(this.data) && this.data.hasOwnProperty(key);
+MockFirebase.prototype._updateOrAdd = function(key, data, events) {
+  var exists = _.isObject(this.data) && this.data.hasOwnProperty(key)
   if (!exists) {
-    return this._addChild(key, data, events);
+    return this._addChild(key, data, events)
+  } else {
+    return this._updateChild(key, data, events)
   }
-  else {
-    return this._updateChild(key, data, events);
-  }
-};
+}
 
-MockFirebase.prototype._addChild = function (key, data, events) {
+MockFirebase.prototype._addChild = function(key, data, events) {
   if (!_.isObject(this.data)) {
-    this.data = {};
+    this.data = {}
   }
-  this._addKey(key);
-  this.data[key] = utils.cleanData(data);
-  var child = this.child(key);
-  child._dataChanged(data);
-  if (events) events.push(['child_added', child.getData(), child.priority, key]);
-};
+  this._addKey(key)
+  this.data[key] = utils.cleanData(data)
+  var child = this.child(key)
+  child._dataChanged(data)
+  if (events) events.push(['child_added', child.getData(), child.priority, key])
+}
 
-MockFirebase.prototype._removeChild = function (key, events) {
+MockFirebase.prototype._removeChild = function(key, events) {
   if (this._hasChild(key)) {
-    this._dropKey(key);
-    var data = this.data[key];
-    delete this.data[key];
+    this._dropKey(key)
+    var data = this.data[key]
+    delete this.data[key]
     if (_.isEmpty(this.data)) {
-      this.data = null;
+      this.data = null
     }
     if (_.has(this.children, key)) {
-      this.children[key]._dataChanged(null);
+      this.children[key]._dataChanged(null)
     }
-    if (events) events.push(['child_removed', data, null, key]);
+    if (events) events.push(['child_removed', data, null, key])
   }
-};
+}
 
-MockFirebase.prototype._updateChild = function (key, data, events) {
-  var cdata = utils.cleanData(data);
-  if (_.isObject(this.data) && _.has(this.data, key) && !_.isEqual(this.data[key], cdata)) {
-    this.data[key] = cdata;
-    var c = this.child(key);
-    c._dataChanged(data);
-    if (events) events.push(['child_changed', c.getData(), c.priority, key]);
+MockFirebase.prototype._updateChild = function(key, data, events) {
+  var cdata = utils.cleanData(data)
+  if (
+    _.isObject(this.data) &&
+    _.has(this.data, key) &&
+    !_.isEqual(this.data[key], cdata)
+  ) {
+    this.data[key] = cdata
+    var c = this.child(key)
+    c._dataChanged(data)
+    if (events) events.push(['child_changed', c.getData(), c.priority, key])
   }
-};
+}
 
-MockFirebase.prototype._newAutoId = function () {
-  return (this._lastAutoId = MockFirebase.autoId());
-};
+MockFirebase.prototype._newAutoId = function() {
+  return (this._lastAutoId = MockFirebase.autoId())
+}
 
-MockFirebase.prototype._nextErr = function (type) {
-  var err = this.errs[type];
-  delete this.errs[type];
-  return err || null;
-};
+MockFirebase.prototype._nextErr = function(type) {
+  var err = this.errs[type]
+  delete this.errs[type]
+  return err || null
+}
 
-MockFirebase.prototype._hasChild = function (key) {
-  return _.isObject(this.data) && _.has(this.data, key);
-};
+MockFirebase.prototype._hasChild = function(key) {
+  return _.isObject(this.data) && _.has(this.data, key)
+}
 
-MockFirebase.prototype._childData = function (key) {
-  return this._hasChild(key) ? this.data[key] : null;
-};
+MockFirebase.prototype._childData = function(key) {
+  return this._hasChild(key) ? this.data[key] : null
+}
 
-MockFirebase.prototype._getPrevChild = function (key) {
-//      this._resort();
-  var keys = this.sortedDataKeys;
-  var i = _.indexOf(keys, key);
+MockFirebase.prototype._getPrevChild = function(key) {
+  //      this._resort();
+  var keys = this.sortedDataKeys
+  var i = _.indexOf(keys, key)
   if (i === -1) {
-    keys = keys.slice();
-    keys.push(key);
-    keys.sort(_.bind(this.childComparator, this));
-    i = _.indexOf(keys, key);
+    keys = keys.slice()
+    keys.push(key)
+    keys.sort(_.bind(this.childComparator, this))
+    i = _.indexOf(keys, key)
   }
-  return i === 0 ? null : keys[i - 1];
-};
+  return i === 0 ? null : keys[i - 1]
+}
 
-MockFirebase.prototype._on = function (deferName, event, callback, cancel, context) {
-  var self = this;
-  var handlers = [callback, context, cancel];
-  this._events[event].push(handlers);
+MockFirebase.prototype._on = function(
+  deferName,
+  event,
+  callback,
+  cancel,
+  context
+) {
+  var self = this
+  var handlers = [callback, context, cancel]
+  this._events[event].push(handlers)
   // value and child_added both trigger initial events when called so
   // defer those here
   if ('value' === event || 'child_added' === event) {
-    self._defer(deferName, _.toArray(arguments).slice(1), function () {
+    self._defer(deferName, _.toArray(arguments).slice(1), function() {
       // make sure off() wasn't called before we triggered this
       if (self._events[event].indexOf(handlers) > -1) {
         switch (event) {
           case 'value':
-            callback.call(context, new Snapshot(self, self.getData(), self.priority));
-            break;
+            callback.call(
+              context,
+              new Snapshot(self, self.getData(), self.priority)
+            )
+            break
           case 'child_added':
-            var previousChild = null;
-            self.sortedDataKeys
-              .forEach(function (key) {
-                var child = self.child(key);
-                callback.call(context, new Snapshot(child, child.getData(), child.priority), previousChild);
-                previousChild = key;
-              });
-            break;
+            var previousChild = null
+            self.sortedDataKeys.forEach(function(key) {
+              var child = self.child(key)
+              callback.call(
+                context,
+                new Snapshot(child, child.getData(), child.priority),
+                previousChild
+              )
+              previousChild = key
+            })
+            break
         }
       }
-    });
+    })
   }
-};
+}
 
-MockFirebase.prototype.childComparator = function (a, b) {
-  var aPri = this._getPri(a);
-  var bPri = this._getPri(b);
-  var x = utils.priorityComparator(aPri, bPri);
+MockFirebase.prototype.childComparator = function(a, b) {
+  var aPri = this._getPri(a)
+  var bPri = this._getPri(b)
+  var x = utils.priorityComparator(aPri, bPri)
   if (x === 0) {
     if (a !== b) {
-      x = a < b ? -1 : 1;
+      x = a < b ? -1 : 1
     }
   }
-  return x;
-};
+  return x
+}
 
 function extractName(path) {
-  return ((path || '').match(/\/([^.$\[\]#\/]+)$/) || [null, null])[1];
+  return ((path || '').match(/\/([^.$\[\]#\/]+)$/) || [null, null])[1]
 }
 
 function render(datum) {
   if (datum && _.isObject(datum)) {
-    var keys = _.keys(datum);
+    var keys = _.keys(datum)
 
     if (_.every(keys, RegExp.prototype.test.bind(/^\d+$/))) {
-      var max = keys.reduce(function (max, key) {
-        var n = Number(key);
-        return n > max ? n : max;
-      }, 0);
+      var max = keys.reduce(function(max, key) {
+        var n = Number(key)
+        return n > max ? n : max
+      }, 0)
 
       if (keys.length * 2 > max) {
-        var array = Array(max);
+        var array = Array(max)
 
-        _.forIn(datum, function (value, key) {
-          array[Number(key)] = value;
-        });
+        _.forIn(datum, function(value, key) {
+          array[Number(key)] = value
+        })
 
-        return array;
+        return array
       }
     } else {
-      return _.cloneDeep(datum);
+      return _.cloneDeep(datum)
     }
   } else {
-    return _.clone(datum);
+    return _.clone(datum)
   }
 }
 
-module.exports = MockFirebase;
+module.exports = MockFirebase
 
-},{"./firebase-auth":77,"./lodash":87,"./query":89,"./queue":90,"./snapshot":93,"./utils":99,"./validators":100,"assert":1,"firebase-auto-ids":12,"rsvp":69}],79:[function(require,module,exports){
+},{"./firebase-auth":78,"./lodash":88,"./query":90,"./queue":91,"./snapshot":94,"./utils":100,"./validators":101,"assert":1,"firebase-auto-ids":12,"rsvp":70}],80:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -53156,7 +54393,7 @@ function extractName(path) {
 
 module.exports = MockFirestoreCollection;
 
-},{"./firestore-query":85,"./lodash":87,"./queue":90,"./utils":99,"./validators":100,"assert":1,"firebase-auto-ids":12,"rsvp":69}],80:[function(require,module,exports){
+},{"./firestore-query":86,"./lodash":88,"./queue":91,"./utils":100,"./validators":101,"assert":1,"firebase-auto-ids":12,"rsvp":70}],81:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -53188,7 +54425,7 @@ function applyDelta(data, delta) {
 
 module.exports = MockFirestoreDeltaDocumentSnapshot;
 
-},{"./firestore-document-snapshot":81,"./lodash":87}],81:[function(require,module,exports){
+},{"./firestore-document-snapshot":82,"./lodash":88}],82:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -53224,7 +54461,7 @@ MockFirestoreDocumentSnapshot.prototype.get = function (path) {
 
 module.exports = MockFirestoreDocumentSnapshot;
 
-},{"./lodash":87}],82:[function(require,module,exports){
+},{"./lodash":88}],83:[function(require,module,exports){
 'use strict'
 
 var _ = require('./lodash')
@@ -53391,7 +54628,7 @@ MockFirestoreDocument.prototype._update = function(changes, opts, callback) {
         var base = self._getData()
         var data
         if (_opts.setMerge) {
-          data = _.merge(_.isObject(base) ? base : {}, changes)
+          data = _.merge({}, _.isObject(base) ? base : {}, changes)
         } else {
           // check if changes contain no nested objects
           if (
@@ -53404,12 +54641,14 @@ MockFirestoreDocument.prototype._update = function(changes, opts, callback) {
           ) {
             // allow data to be merged, which allows merging of nested data
             data = _.merge(
+              {},
               _.isObject(base) ? base : {},
               utils.updateToFirestoreObject(changes)
             )
           } else {
             // don't allow data to be merged, which overwrite nested data
             data = _.mergeWith(
+              {},
               _.isObject(base) ? base : {},
               utils.updateToFirestoreObject(changes),
               (objValue, srcValue) => {
@@ -53422,7 +54661,7 @@ MockFirestoreDocument.prototype._update = function(changes, opts, callback) {
             )
           }
         }
-        data = utils.removeEmptyFirestoreProperties(data)
+        data = utils.removeEmptyFirestoreProperties(data, base)
         self._dataChanged(data)
         resolve(data)
       } else {
@@ -53534,35 +54773,44 @@ function extractName(path) {
 
 module.exports = MockFirestoreDocument
 
-},{"./firestore-document-snapshot":81,"./lodash":87,"./queue":90,"./utils":99,"./validators":100,"assert":1,"firebase-auto-ids":12,"rsvp":69}],83:[function(require,module,exports){
-'use strict';
+},{"./firestore-document-snapshot":82,"./lodash":88,"./queue":91,"./utils":100,"./validators":101,"assert":1,"firebase-auto-ids":12,"rsvp":70}],84:[function(require,module,exports){
+'use strict'
 
-function MockFirestoreFieldValue(type) {
-  this.type = type;
+function MockFirestoreFieldValue(type, data) {
+  this.type = type
+  this.data = data
 }
 
-MockFirestoreFieldValue.prototype.isEqual = function (other) {
+MockFirestoreFieldValue.prototype.isEqual = function(other) {
   if (other instanceof MockFirestoreFieldValue && this.type === other.type) {
-    return true;
+    return true
   }
-  return false;
-};
-
-MockFirestoreFieldValue.delete = function () {
-  return new MockFirestoreFieldValue('delete');
-};
-
-MockFirestoreFieldValue.serverTimestamp = function () {
-  return new MockFirestoreFieldValue('serverTimestamp');
-};
-
-MockFirestoreFieldValue.arrayUnion = function () {
-  return new MockFirestoreFieldValue('arrayUnion');
+  return false
 }
 
-module.exports = MockFirestoreFieldValue;
+MockFirestoreFieldValue.delete = function() {
+  return new MockFirestoreFieldValue('delete')
+}
 
-},{}],84:[function(require,module,exports){
+MockFirestoreFieldValue.serverTimestamp = function() {
+  return new MockFirestoreFieldValue('serverTimestamp')
+}
+
+MockFirestoreFieldValue.arrayUnion = function(...data) {
+  return new MockFirestoreFieldValue('arrayUnion', data)
+}
+
+MockFirestoreFieldValue.arrayRemove = function(...data) {
+  return new MockFirestoreFieldValue('arrayRemove', data)
+}
+
+MockFirestoreFieldValue.increment = function(n) {
+  return new MockFirestoreFieldValue('increment', n)
+}
+
+module.exports = MockFirestoreFieldValue
+
+},{}],85:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -53592,7 +54840,7 @@ MockFirestoreQuerySnapshot.prototype.forEach = function (callback, context) {
 
 module.exports = MockFirestoreQuerySnapshot;
 
-},{"./firestore-document-snapshot":81,"./lodash":87}],85:[function(require,module,exports){
+},{"./firestore-document-snapshot":82,"./lodash":88}],86:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -53786,7 +55034,7 @@ function extractName(path) {
 
 module.exports = MockFirestoreQuery;
 
-},{"./firestore-query-snapshot":84,"./lodash":87,"./queue":90,"./utils":99,"./validators":100,"assert":1,"firebase-auto-ids":12,"rsvp":69,"stream":71}],86:[function(require,module,exports){
+},{"./firestore-query-snapshot":85,"./lodash":88,"./queue":91,"./utils":100,"./validators":101,"assert":1,"firebase-auto-ids":12,"rsvp":70,"stream":72}],87:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -54011,7 +55259,7 @@ function extractName(path) {
 
 module.exports = MockFirestore;
 
-},{"./firestore-collection":79,"./firestore-document":82,"./firestore-field-value":83,"./lodash":87,"./queue":90,"./utils":99,"./validators":100,"assert":1,"rsvp":69}],87:[function(require,module,exports){
+},{"./firestore-collection":80,"./firestore-document":83,"./firestore-field-value":84,"./lodash":88,"./queue":91,"./utils":100,"./validators":101,"assert":1,"rsvp":70}],88:[function(require,module,exports){
 module.exports = {
   assign: require('lodash.assign'),
   bind: require('lodash.bind'),
@@ -54048,10 +55296,11 @@ module.exports = {
   reduce: require('lodash.reduce'),
   remove: require('lodash.remove'),
   size: require('lodash.size'),
-  toArray: require('lodash.toarray')
+  toArray: require('lodash.toarray'),
+  union: require('lodash.union')
 }
 
-},{"lodash.assign":16,"lodash.assignin":17,"lodash.bind":18,"lodash.clone":19,"lodash.clonedeep":20,"lodash.clonedeepwith":21,"lodash.compact":22,"lodash.difference":23,"lodash.every":24,"lodash.filter":25,"lodash.find":26,"lodash.findindex":27,"lodash.foreach":28,"lodash.forin":29,"lodash.get":30,"lodash.has":31,"lodash.includes":32,"lodash.indexof":33,"lodash.isempty":34,"lodash.isequal":35,"lodash.isfunction":36,"lodash.isnumber":37,"lodash.isobject":38,"lodash.isstring":39,"lodash.isundefined":40,"lodash.keys":41,"lodash.map":42,"lodash.merge":43,"lodash.mergewith":44,"lodash.noop":45,"lodash.orderby":46,"lodash.reduce":47,"lodash.remove":48,"lodash.set":49,"lodash.size":50,"lodash.toarray":51}],88:[function(require,module,exports){
+},{"lodash.assign":16,"lodash.assignin":17,"lodash.bind":18,"lodash.clone":19,"lodash.clonedeep":20,"lodash.clonedeepwith":21,"lodash.compact":22,"lodash.difference":23,"lodash.every":24,"lodash.filter":25,"lodash.find":26,"lodash.findindex":27,"lodash.foreach":28,"lodash.forin":29,"lodash.get":30,"lodash.has":31,"lodash.includes":32,"lodash.indexof":33,"lodash.isempty":34,"lodash.isequal":35,"lodash.isfunction":36,"lodash.isnumber":37,"lodash.isobject":38,"lodash.isstring":39,"lodash.isundefined":40,"lodash.keys":41,"lodash.map":42,"lodash.merge":43,"lodash.mergewith":44,"lodash.noop":45,"lodash.orderby":46,"lodash.reduce":47,"lodash.remove":48,"lodash.set":49,"lodash.size":50,"lodash.toarray":51,"lodash.union":52}],89:[function(require,module,exports){
 'use strict';
 
 function MockMessaging() {
@@ -54059,7 +55308,7 @@ function MockMessaging() {
 
 module.exports = MockMessaging;
 
-},{}],89:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -54246,7 +55495,7 @@ function assertQuery (method, pri, key) {
 
 module.exports = MockQuery;
 
-},{"./lodash":87,"./slice":92,"./utils":99,"./validators":100,"rsvp":69}],90:[function(require,module,exports){
+},{"./lodash":88,"./slice":93,"./utils":100,"./validators":101,"rsvp":70}],91:[function(require,module,exports){
 'use strict';
 
 var _            = require('./lodash');
@@ -54322,7 +55571,7 @@ FlushEvent.prototype.cancel = function () {
 exports.Queue = FlushQueue;
 exports.Event = FlushEvent;
 
-},{"./lodash":87,"events":10,"util":75}],91:[function(require,module,exports){
+},{"./lodash":88,"events":10,"util":76}],92:[function(require,module,exports){
 var MockAuthentication = require('./auth');
 var MockFirebase = require('./firebase');
 var MockFirestore = require('./firestore');
@@ -54431,7 +55680,7 @@ function MockFirebaseSdk(createDatabase, createAuth, createFirestore, createStor
 
 module.exports = MockFirebaseSdk;
 
-},{"./auth":76,"./firebase":78,"./firestore":86,"./firestore-field-value":83,"./messaging":88,"./storage":97}],92:[function(require,module,exports){
+},{"./auth":77,"./firebase":79,"./firestore":87,"./firestore-field-value":84,"./messaging":89,"./storage":98}],93:[function(require,module,exports){
 'use strict';
 
 var _        = require('./lodash');
@@ -54635,7 +55884,7 @@ Slice.prototype._build = function(ref, rawData) {
 
 module.exports = Slice;
 
-},{"./lodash":87,"./snapshot":93,"./utils":99}],93:[function(require,module,exports){
+},{"./lodash":88,"./snapshot":94,"./utils":100}],94:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -54723,7 +55972,7 @@ function isValue (value) {
 
 module.exports = MockDataSnapshot;
 
-},{"./lodash":87}],94:[function(require,module,exports){
+},{"./lodash":88}],95:[function(require,module,exports){
 /*
   Mock for @google-cloud/storage Bucket
   https://cloud.google.com/nodejs/docs/reference/storage/1.6.x/Bucket
@@ -54784,7 +56033,7 @@ MockStorageBucket.prototype.moveFile = function (oldPath, newPath) {
 
 module.exports = MockStorageBucket;
 
-},{"./storage-file":95,"rsvp":69}],95:[function(require,module,exports){
+},{"./storage-file":96,"rsvp":70}],96:[function(require,module,exports){
 /*
   Mock for @google-cloud/storage File
   https://cloud.google.com/nodejs/docs/reference/storage/1.6.x/File
@@ -54876,7 +56125,7 @@ MockStorageFile.prototype.getMetadata = function() {
 
 module.exports = MockStorageFile;
 
-},{"./lodash":87,"fs":7,"rsvp":69}],96:[function(require,module,exports){
+},{"./lodash":88,"fs":7,"rsvp":70}],97:[function(require,module,exports){
 /*
   Mock for firebase.storage.Reference
   https://firebase.google.com/docs/reference/js/firebase.storage.Reference
@@ -54949,7 +56198,7 @@ MockStorageReference.prototype.putString = function(data) {
 
 module.exports = MockStorageReference;
 
-},{"rsvp":69}],97:[function(require,module,exports){
+},{"rsvp":70}],98:[function(require,module,exports){
 /*
   Mock for firebase.storage.Storage and admin.storage.Storage
   https://firebase.google.com/docs/reference/js/firebase.storage.Storage
@@ -54998,7 +56247,7 @@ MockStorage.prototype.bucket = function(name) {
 
 module.exports = MockStorage;
 
-},{"./storage-bucket":94,"./storage-reference":96,"rsvp":69}],98:[function(require,module,exports){
+},{"./storage-bucket":95,"./storage-reference":97,"rsvp":70}],99:[function(require,module,exports){
 'use strict';
 
 var _ = require('./lodash');
@@ -55114,217 +56363,255 @@ MockFirebaseUser.prototype.getIdToken = function (forceRefresh) {
 
 module.exports = MockFirebaseUser;
 
-},{"./lodash":87,"rsvp":69}],99:[function(require,module,exports){
-'use strict';
+},{"./lodash":88,"rsvp":70}],100:[function(require,module,exports){
+'use strict'
 
-var Snapshot = require('./snapshot');
-var FieldValue = require('./firestore-field-value');
-var _ = require('./lodash');
+var Snapshot = require('./snapshot')
+var FieldValue = require('./firestore-field-value')
+var _ = require('./lodash')
 
 exports.makeRefSnap = function makeRefSnap(ref) {
-  return new Snapshot(ref, ref.getData(), ref.priority);
-};
+  return new Snapshot(ref, ref.getData(), ref.priority)
+}
 
 exports.mergePaths = function mergePaths(base, add) {
-  return base.replace(/\/$/, '') + '/' + add.replace(/^\//, '');
-};
+  return base.replace(/\/$/, '') + '/' + add.replace(/^\//, '')
+}
 
 exports.cleanData = function cleanData(data) {
-  var newData = _.clone(data);
+  var newData = _.clone(data)
   if (_.isObject(newData)) {
     if (_.has(newData, '.value')) {
-      newData = _.clone(newData['.value']);
+      newData = _.clone(newData['.value'])
     }
     if (_.has(newData, '.priority')) {
-      delete newData['.priority'];
+      delete newData['.priority']
     }
     if (_.isEmpty(newData)) {
-      newData = null;
+      newData = null
     }
   }
-  return newData;
-};
+  return newData
+}
 
 exports.cleanFirestoreData = function cleanFirestoreData(data) {
-  var newData = _.clone(data);
-  return newData;
-};
+  var newData = _.clone(data)
+  return newData
+}
 
 exports.getMeta = function getMeta(data, key, defaultVal) {
-  var val = defaultVal;
-  var metaKey = '.' + key;
+  var val = defaultVal
+  var metaKey = '.' + key
   if (_.isObject(data) && _.has(data, metaKey)) {
-    val = data[metaKey];
-    delete data[metaKey];
+    val = data[metaKey]
+    delete data[metaKey]
   }
-  return val;
-};
+  return val
+}
 
 exports.assertKey = function assertKey(method, key, argNum) {
-  if (!argNum) argNum = 'first';
-  if (typeof(key) !== 'string' || key.match(/[.#$\/\[\]]/)) {
-    throw new Error(method + ' failed: ' + argNum + ' was an invalid key "' + (key + '') + '. Firebase keys must be non-empty strings and can\'t contain ".", "#", "$", "/", "[", or "]"');
+  if (!argNum) argNum = 'first'
+  if (typeof key !== 'string' || key.match(/[.#$\/\[\]]/)) {
+    throw new Error(
+      method +
+        ' failed: ' +
+        argNum +
+        ' was an invalid key "' +
+        (key + '') +
+        '. Firebase keys must be non-empty strings and can\'t contain ".", "#", "$", "/", "[", or "]"'
+    )
   }
-};
+}
 
-exports.priAndKeyComparator = function priAndKeyComparator(testPri, testKey, valPri, valKey) {
-  var x = 0;
+exports.priAndKeyComparator = function priAndKeyComparator(
+  testPri,
+  testKey,
+  valPri,
+  valKey
+) {
+  var x = 0
   if (!_.isUndefined(testPri)) {
-    x = exports.priorityComparator(testPri, valPri);
+    x = exports.priorityComparator(testPri, valPri)
   }
   if (x === 0 && !_.isUndefined(testKey) && testKey !== valKey) {
-    x = testKey < valKey ? -1 : 1;
+    x = testKey < valKey ? -1 : 1
   }
-  return x;
-};
+  return x
+}
 
 exports.priorityComparator = function priorityComparator(a, b) {
   if (a !== b) {
     if (a === null || b === null) {
-      return a === null ? -1 : 1;
+      return a === null ? -1 : 1
     }
     if (typeof a !== typeof b) {
-      return typeof a === 'number' ? -1 : 1;
+      return typeof a === 'number' ? -1 : 1
     } else {
-      return a > b ? 1 : -1;
+      return a > b ? 1 : -1
     }
   }
-  return 0;
-};
+  return 0
+}
 
 exports.isServerTimestamp = function isServerTimestamp(data) {
-  return _.isObject(data) && data['.sv'] === 'timestamp';
-};
+  return _.isObject(data) && data['.sv'] === 'timestamp'
+}
+
+exports.isArrayUnion = function isArrayUnion(data) {
+  return _.isObject(data) && data.type === 'arrayUnion'
+}
 
 exports.removeEmptyRtdbProperties = function removeEmptyRtdbProperties(obj) {
-  var t = typeof obj;
-  if (t === 'boolean' || t === 'string' || t === 'number' || t === 'undefined') {
-    return obj;
+  var t = typeof obj
+  if (
+    t === 'boolean' ||
+    t === 'string' ||
+    t === 'number' ||
+    t === 'undefined'
+  ) {
+    return obj
   }
 
-  var keys = getKeys(obj);
+  var keys = getKeys(obj)
   if (keys.length === 0) {
-    return null;
+    return null
   } else {
     for (var s in obj) {
-      var value = removeEmptyRtdbProperties(obj[s]);
+      var value = removeEmptyRtdbProperties(obj[s])
       if (value === null) {
-        delete obj[s];
+        delete obj[s]
       }
     }
     if (getKeys(obj).length === 0) {
-      return null;
+      return null
     }
   }
-  return obj;
+  return obj
 
   function getKeys(o) {
-    var result = [];
-    for (var s in o) result.push(s);
-    return result;
+    var result = []
+    for (var s in o) result.push(s)
+    return result
   }
-};
+}
 
-exports.removeEmptyFirestoreProperties = function removeEmptyFirestoreProperties(obj) {
-  var t = typeof obj;
-  if (t === 'boolean' || t === 'string' || t === 'number' || t === 'undefined') {
-    return obj;
+exports.removeEmptyFirestoreProperties = function removeEmptyFirestoreProperties(
+  obj,
+  originalData = {}
+) {
+  var originalData = originalData || {}
+  var t = typeof obj
+  if (
+    t === 'boolean' ||
+    t === 'string' ||
+    t === 'number' ||
+    t === 'undefined'
+  ) {
+    return obj
   }
-  if (obj instanceof Date) return obj;
-
-  var keys = getKeys(obj);
+  if (obj instanceof Date) return obj
+  var keys = getKeys(obj)
   if (keys.length > 0) {
     for (var s in obj) {
-      var value = removeEmptyFirestoreProperties(obj[s]);
+      var value = removeEmptyFirestoreProperties(obj[s], originalData[s])
       if (FieldValue.delete().isEqual(value)) {
-        delete obj[s];
+        delete obj[s]
       }
       if (FieldValue.serverTimestamp().isEqual(value)) {
-        obj[s] = new Date();
+        obj[s] = new Date()
+      }
+      if (FieldValue.arrayUnion().isEqual(value)) {
+        obj[s] = _.union(originalData[s] || [], value.data)
+      }
+      if (FieldValue.arrayRemove().isEqual(value)) {
+        obj[s] = _.difference(originalData[s] || [], value.data)
+      }
+      if (FieldValue.increment().isEqual(value)) {
+        obj[s] = originalData[s] + value.data
       }
     }
   }
-  return obj;
+  return obj
 
   function getKeys(o) {
-    var result = [];
-    for (var s in o) result.push(s);
-    return result;
+    var result = []
+    for (var s in o) result.push(s)
+    return result
   }
-};
+}
 
 exports.updateToRtdbObject = function updateToRtdbObject(update) {
-  var result = {};
+  var result = {}
   for (var s in update) {
-    var parts = s.split('/');
-    var value = update[s];
-    var o = result;
+    var parts = s.split('/')
+    var value = update[s]
+    var o = result
     do {
-      var key = parts.shift();
-      if(key) {
-        var newObject = o[key] || {};
-        o[key] = parts.length > 0 ? newObject : value;
-        o = newObject;
+      var key = parts.shift()
+      if (key) {
+        var newObject = o[key] || {}
+        o[key] = parts.length > 0 ? newObject : value
+        o = newObject
       }
-    } while (parts.length);
+    } while (parts.length)
   }
-  return result;
-};
+  return result
+}
 
 exports.updateToFirestoreObject = function updateToFirestoreObject(update) {
-  var result = {};
+  var result = {}
   for (var s in update) {
-    var parts = s.split('.');
-    var value = update[s];
-    var o = result;
+    var parts = s.split('.')
+    var value = update[s]
+    var o = result
     do {
-      var key = parts.shift();
-      if(key) {
-        var newObject = o[key] || {};
-        o[key] = parts.length > 0 ? newObject : value;
-        o = newObject;
+      var key = parts.shift()
+      if (key) {
+        var newObject = o[key] || {}
+        o[key] = parts.length > 0 ? newObject : value
+        o = newObject
       }
-    } while (parts.length);
+    } while (parts.length)
   }
-  return result;
-};
+  return result
+}
 
 /**
  * Recurse through obj and find all properties, which are undefined
  * @param obj
  * @returns {Array} Returns the property paths of undefined properties
  */
-exports.findUndefinedProperties = function (obj) {
-  var results = [];
-  var path = [];
+exports.findUndefinedProperties = function(obj) {
+  var results = []
+  var path = []
 
-  var recurse = function (o, p) {
-    var keys = _.keys(o);
+  var recurse = function(o, p) {
+    var keys = _.keys(o)
     for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
+      var key = keys[i]
       if (o[key] === undefined) {
-        results.push(p.concat([key]).join('.'));
+        results.push(p.concat([key]).join('.'))
       } else {
-        var to = typeof o[key];
+        var to = typeof o[key]
         if (to === 'object') {
-          recurse(o[key], p.concat([key]));
+          recurse(o[key], p.concat([key]))
         }
       }
     }
-  };
+  }
 
-  recurse(obj, path);
-  return results;
-};
+  recurse(obj, path)
+  return results
+}
 
 exports.createThenableReference = function(reference, promise) {
   reference.then = function(success, failure) {
-    return promise.then(success).catch(failure);
-  };
-  return reference;
-};
+    return promise.then(success).catch(failure)
+  }
+  return reference
+}
 
-},{"./firestore-field-value":83,"./lodash":87,"./snapshot":93}],100:[function(require,module,exports){
+},{"./firestore-field-value":84,"./lodash":88,"./snapshot":94}],101:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -55343,7 +56630,7 @@ exports.data = function(obj){
   var undefinedProperties = findUndefinedProperties(obj);
   assert(undefinedProperties.length === 0, 'Data contains undefined properties at ' + undefinedProperties);
 };
-},{"./utils":99,"assert":1,"util":75}],101:[function(require,module,exports){
+},{"./utils":100,"assert":1,"util":76}],102:[function(require,module,exports){
 'use strict';
 
 var MockFirestoreDeltaDocumentSnapshot = require('./firestore-delta-document-snapshot');
@@ -55356,7 +56643,7 @@ exports.MockStorage = require('./storage');
 exports.MockMessaging = require('./messaging');
 exports.DeltaDocumentSnapshot = MockFirestoreDeltaDocumentSnapshot.create;
 
-},{"./auth":76,"./firebase":78,"./firestore":86,"./firestore-delta-document-snapshot":80,"./messaging":88,"./sdk":91,"./storage":97}]},{},[101])(101)
+},{"./auth":77,"./firebase":79,"./firestore":87,"./firestore-delta-document-snapshot":81,"./messaging":89,"./sdk":92,"./storage":98}]},{},[102])(102)
 });
 ;(function (window) {
   'use strict';

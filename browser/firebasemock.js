@@ -1,4 +1,4 @@
-/** 9dots-firebase-mock - v0.1.10
+/** 9dots-firebase-mock - v0.1.11
 https://github.com/soumak77/firebase-mock
 * Copyright (c) 2016 Brian Soumakian
 * License: MIT */
@@ -56527,7 +56527,11 @@ exports.removeEmptyFirestoreProperties = function removeEmptyFirestoreProperties
         obj[s] = _.difference(originalData[s] || [], value.data)
       }
       if (FieldValue.increment().isEqual(value)) {
-        obj[s] = originalData[s] + value.data
+        if (typeof originalData[s] === 'number') {
+          obj[s] = originalData[s] + value.data
+        } else {
+          obj[s] = value.data
+        }
       }
     }
   }
